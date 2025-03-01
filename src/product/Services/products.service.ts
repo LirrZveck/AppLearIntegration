@@ -54,7 +54,7 @@ export class ProductService {
   }
 
   
-  inserStockMovement(product: StockMovement) {
+  insertStockMovement(product: StockMovement) {
     
     const message: Messageitem = {
       messageId: product.messageID,
@@ -69,12 +69,13 @@ export class ProductService {
 
     this.clientPg.query(insertMovementQuery);
     this.insertItems(product);
+
   }
   
 
   async insertItems(stockMovement: StockMovement): Promise<void> {
     const client = this.clientPg;
-    console.log(StockMovement)
+    //console.log(StockMovement)
     try {
       // Inicia una transacción
       await this.clientPg.query('BEGIN');
@@ -119,5 +120,6 @@ export class ProductService {
       console.error('Error inserting StockMovement and Items:', error);
       throw error;
     }
+    
   }
 }

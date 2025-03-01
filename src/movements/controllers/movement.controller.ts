@@ -1,9 +1,9 @@
 import { Body, Controller, Get, HttpCode, Param, Post, Put } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { MessageDto } from 'src/messages/models/messages.model';
-import { BrokengItem, PendingItem, ProductionItem } from '../models/movements.model';
+import { PendingItem, ProductionItem } from '../models/movements.model';
 import { MovementService } from '../services/movement.service';
-import { PendingItemDTO, ProductionItemDTO } from '../dtos/movement.dto';
+import { FailedItemsDto, PendingItemDTO, ProductionItemDTO } from '../dtos/movement.dto';
 
 @Controller('movement')
 export class MovementController {
@@ -141,7 +141,7 @@ export class MovementController {
         type: MessageDto,
         description: 'Internal Server Error. Connection error.',
       })
-      postBroken(@Body() payload: BrokengItem) {
+      postBroken(@Body() payload: FailedItemsDto) {
         //return this.products.getProductsBIQ();
       }
 
@@ -165,7 +165,7 @@ export class MovementController {
         type: MessageDto,
         description: 'Internal Server Error. Connection error.',
       })
-      putPending(@Param() product: PendingItem) {
+      putPending(@Param() product: PendingItemDTO) {
         //return this.products.getProductsBIQ();
       }
 
@@ -186,7 +186,7 @@ export class MovementController {
         type: MessageDto,
         description: 'Internal Server Error. Connection error.',
       })
-      putProduction(@Param() payload: ProductionItem) {
+      putProduction(@Param() payload: ProductionItemDTO) {
         //return this.products.getProductsBIQ();
       }
 

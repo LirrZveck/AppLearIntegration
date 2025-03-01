@@ -70,6 +70,6 @@ export class ProductController {
     description: 'Internal Server Error. Connection error.',
   })
   postProductsBIQ(@Body() payload: StockMovementDTO) {
-    return this.products.inserStockMovement(payload);
+    return this.products.insertItems(payload);
   }
 }

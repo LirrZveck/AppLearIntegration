@@ -112,7 +112,7 @@ export class PendingItemDTO {
   readonly status: boolean;
 }
 
-export class BrokengItemDTO {
+export class FailedItemsDto {
   @ApiProperty({
     description: 'Código del producto (GS1EAN)',
     example: '112233445566',

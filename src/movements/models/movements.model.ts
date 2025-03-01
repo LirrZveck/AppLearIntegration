@@ -23,7 +23,7 @@ export class PendingItem {
   }
 
 
-  export class BrokengItem {
+  export class FailedItems {
     readonly productCode: string; //GS1EAN
     readonly lot: string; //GS1LOTE
     readonly description: string; //

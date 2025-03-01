@@ -2,97 +2,199 @@ import { Inject, Injectable } from '@nestjs/common';
 import { StockMovement } from 'src/product/models/produc.model';
 import { HttpService } from '@nestjs/axios';
 
-
-import { BrokengItem, PendingItem, ProductionItem } from '../models/movements.model';
+import {
+  PendingItem,
+  ProductionItem,
+} from '../models/movements.model';
 import { Message } from 'src/messages/models/messages.model';
 import { MessagesService } from 'src/messages/services/messages/messages.service';
 import { Client } from 'pg';
-
+import {
+  insertPending,
+  insertProduction,
+  selectAllfailed,
+  selectAllPending,
+  selectAllProduction,
+} from '../sql/sqlMovementStatements';
+import { FailedItemsDto, ProductionItemDTO } from '../dtos/movement.dto';
 
 @Injectable()
 export class MovementService {
-  constructor(private readonly httpService: HttpService,
-        private readonly messages: MessagesService,
-        @Inject('postgresConnection') private clientPg: Client,
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly messages: MessagesService,
+    @Inject('postgresConnection') private clientPg: Client,
   ) {}
 
   async getProductionItems(): Promise<ProductionItem[]> {
     return new Promise<ProductionItem[]>((resolve, reject) => {
       try {
-        //Realizar la consulta de los datos y devolver el listado de produccion
-      } catch (error) {}
+        this.clientPg.query(selectAllProduction, (err, res) => {
+          if (err) {
+            reject(err);
+          }
+          console.log(res.rows);
+          resolve(res.rows);
+        });
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
   async getPendingItems(): Promise<ProductionItem[]> {
     return new Promise<ProductionItem[]>((resolve, reject) => {
       try {
-        //Realizar la consulta de los datos y devolver el listado de pendientes
-      } catch (error) {}
-    });
-  }
-  async getBrokenItems(): Promise<ProductionItem[]> {
-    return new Promise<ProductionItem[]>((resolve, reject) => {
-      try {
-        //Realizar la consulta de los datos y devolver el listado de averiados
-      } catch (error) {}
-    });
-  }
-
-
-  async postProduction(payload: StockMovement): Promise<Message | any> {
-    return new Promise<ProductionItem>((resolve, reject) => {
-    
-
-
-    });
-  }
-
-
-  async postPending(payload: StockMovement): Promise<StockMovement | any> {
-    return new Promise<PendingItem>((resolve, reject) => {
-      switch (payload.movementOrder.logisticsCenter) {
-        case '01':
-          try {
-            this.httpService.get<StockMovement>(
-              'https://jsonplaceholder.typicode.com/posts/1',
-            );
-          } catch (error) {}
-          break;
-
-        case '02':
-          try {
-            this.httpService.get<StockMovement>(
-              'https://jsonplaceholder.typicode.com/posts/1',
-            );
-          } catch (error) {}
-          break;
-        default:
-          break;
+        this.clientPg.query(selectAllPending, (err, res) => {
+          if (err) {
+            reject(err);
+          }
+          console.log(res.rows);
+          resolve(res.rows);
+        });
+      } catch (error) {
+        reject(error);
       }
     });
-  
   }
-  async postBroken(payload: StockMovement): Promise<StockMovement | any> {
-    return new Promise<BrokengItem>((resolve, reject) => {
-      switch (payload.movementOrder.logisticsCenter) {
-        case '01':
-          try {
-            this.httpService.get<StockMovement>(
-              'https://jsonplaceholder.typicode.com/posts/1',
-            );
-          } catch (error) {}
-          break;
+  async getFailedItems(): Promise<ProductionItem[]> {
+    return new Promise<ProductionItem[]>((resolve, reject) => {
+      try {
+        this.clientPg.query(selectAllfailed, (err, res) => {
+          if (err) {
+            reject(err);
+          }
+          console.log(res.rows);
+          resolve(res.rows);
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
 
-        case '02':
-          try {
-            this.httpService.get<StockMovement>(
-              'https://jsonplaceholder.typicode.com/posts/1',
-            );
-          } catch (error) {}
-          break;
-        default:
-          break;
+  async postProduction(productionItem: ProductionItem): Promise<string> {
+    return new Promise<string>(async (resolve, reject) => {
+      const client = this.clientPg;
+      try {
+        // Inicia una transacción
+        await this.clientPg.query('BEGIN');
+
+        const {
+          productCode,
+          lot,
+          description,
+          quantity,
+          expiredDate,
+          cum,
+          warehouse,
+          messageId,
+          status,
+        } = productionItem;
+
+        await client.query(insertProduction, [
+          productCode,
+          lot,
+          description,
+          quantity,
+          expiredDate,
+          cum,
+          warehouse,
+          messageId,
+          status,
+        ]);
+
+        // Confirma la transacción
+        await client.query('COMMIT');
+        resolve('Production inserted successfully.');
+      } catch (error) {
+        // Revertir la transacción en caso de error
+        await client.query('ROLLBACK');
+        reject('Error inserting StockMovement and Items:' + error);
+      }
+    });
+  }
+
+  async postPending(pendingItem: PendingItem): Promise<string> {
+    return new Promise<string>(async (resolve, reject) => {
+      const client = this.clientPg;
+      try {
+        // Inicia una transacción
+        await this.clientPg.query('BEGIN');
+
+        const {
+          productCode,
+          lot,
+          description,
+          quantity,
+          expiredDate,
+          cum,
+          warehouse,
+          messageId,
+          status,
+        } = pendingItem;
+
+        await client.query(insertPending, [
+          productCode,
+          lot,
+          description,
+          quantity,
+          expiredDate,
+          cum,
+          warehouse,
+          messageId,
+          status,
+        ]);
+
+        // Confirma la transacción
+        await client.query('COMMIT');
+        resolve('Pending Item inserted successfully.');
+      } catch (error) {
+        // Revertir la transacción en caso de error
+        await client.query('ROLLBACK');
+        reject('Error inserting StockMovement and Items:' + error);
+      }
+    });
+  }
+
+  async postBroken(failedItems: FailedItemsDto): Promise<string> {
+    return new Promise<string>(async (resolve, reject) => {
+      const client = this.clientPg;
+      try {
+        // Inicia una transacción
+        await this.clientPg.query('BEGIN');
+
+        const {
+          productCode,
+          lot,
+          description,
+          quantity,
+          expiredDate,
+          cum,
+          warehouse,
+          messageId,
+          status,
+        } = failedItems;
+
+        await client.query(insertPending, [
+          productCode,
+          lot,
+          description,
+          quantity,
+          expiredDate,
+          cum,
+          warehouse,
+          messageId,
+          status,
+        ]);
+
+        // Confirma la transacción
+        await client.query('COMMIT');
+        resolve('Pending Item inserted successfully.');
+      } catch (error) {
+        // Revertir la transacción en caso de error
+        await client.query('ROLLBACK');
+        reject('Error inserting StockMovement and Items:' + error);
       }
     });
   }
