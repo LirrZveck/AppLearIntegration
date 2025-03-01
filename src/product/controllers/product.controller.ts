@@ -2,19 +2,18 @@ import { Body, Controller, Get, HttpCode, Param, Post, Res } from '@nestjs/commo
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ProductService } from '../Services/products.service';
 import { Message, MessageDto } from 'src/messages/models/messages.model';
-import { StockMovement } from '../models/produc.model';
-import { StockMovementDTO } from '../dtos/order.dto';
+import { ItemDTO, StockMovementDTO } from '../dtos/order.dto';
 
 @Controller('Products')
 export class ProductController {
   constructor(private readonly products: ProductService) {}
 
-  @Get('/BIQ/orderList')
-  @ApiOperation({ summary: 'Result of products from BIQ' })
+  @Get('/BIQ/stockMovement')
+  @ApiOperation({ summary: 'Result of stock movement from BIQ' })
   @HttpCode(200)
   @ApiResponse({
     status: 200,
-    type: MessageDto,
+    type: StockMovementDTO,
   })
   @ApiResponse({
     status: 400,
@@ -26,17 +25,39 @@ export class ProductController {
     type: MessageDto,
     description: 'Internal Server Error. Connection error.',
   })
-  getProductsBIQ() {
-    return this.products.getProductsBIQ();
+  getMovements() {
+    return this.products.getAllMovements();
+
+  }
+  @Get('/BIQ/items')
+  @ApiOperation({ summary: 'List all items from all stocks_movement inserted' })
+  @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    type: ItemDTO,
+  })
+  @ApiResponse({
+    status: 400,
+    type: MessageDto,
+    description: 'Bad request please check body structure.',
+  })
+  @ApiResponse({
+    status: 500,
+    type: MessageDto,
+    description: 'Internal Server Error. Connection error.',
+  })
+  getAllItems() {
+    return this.products.getItems();
   }
 
   /////---------------------Stock Movement-----------------------------////
-  @Post('/BIQ/products')
+  @Post('/BIQ/stockMovement')
   @ApiOperation({ summary: 'Insert the list of products from BIQ' })
   @HttpCode(200)
   @ApiResponse({
     status: 200,
-    type: MessageDto,
+    type: StockMovementDTO,
+    description: ''
   })
   @ApiResponse({
     status: 400,
@@ -49,6 +70,6 @@ export class ProductController {
     description: 'Internal Server Error. Connection error.',
   })
   postProductsBIQ(@Body() payload: StockMovementDTO) {
-    return this.products.postProductsBIQ(payload);
+    return this.products.inserStockMovement(payload);
   }
 }

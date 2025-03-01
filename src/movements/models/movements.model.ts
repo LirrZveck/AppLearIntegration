@@ -1,4 +1,4 @@
-export class productionItem {
+export class ProductionItem {
     readonly productCode: string; //GS1EAN
     readonly lot: string; //GS1LOTE
     readonly description: string; //
@@ -6,10 +6,11 @@ export class productionItem {
     readonly expiredDate: Date; //GS1VALIDADE DD/MM/AA/
     readonly cum: string; //GS1CUM
     readonly warehouse: string; 
+    readonly messageId: string;
     readonly status: boolean;
   }
 
-export class pendingItem {
+export class PendingItem {
     readonly productCode: string; //GS1EAN
     readonly lot: string; //GS1LOTE
     readonly description: string; //
@@ -17,5 +18,20 @@ export class pendingItem {
     readonly expiredDate: Date; //GS1VALIDADE DD/MM/AA/
     readonly cum: string; //GS1CUM
     readonly warehouse: string;
+    readonly messageId: string;
     readonly status: boolean;
   }
+
+
+  export class BrokengItem {
+    readonly productCode: string; //GS1EAN
+    readonly lot: string; //GS1LOTE
+    readonly description: string; //
+    readonly quantity: number;  
+    readonly expiredDate: Date; //GS1VALIDADE DD/MM/AA/
+    readonly cum: string; //GS1CUM
+    readonly warehouse: string;
+    readonly messageId: string;
+    readonly status: boolean;
+  }
+
