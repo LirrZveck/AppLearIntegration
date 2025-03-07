@@ -16,7 +16,7 @@ import {
   selectAllPending,
   selectAllProduction,
 } from '../sql/sqlMovementStatements';
-import { FailedItemsDto, ProductionItemDTO } from '../dtos/movement.dto';
+import { FailedItemsDto, PendingItemDTO, ProductionItemDTO } from '../dtos/movement.dto';
 
 @Injectable()
 export class MovementService {
@@ -26,7 +26,7 @@ export class MovementService {
     @Inject('postgresConnection') private clientPg: Client,
   ) {}
 
-  async getProductionItems(): Promise<ProductionItem[]> {
+  async selectProductionItems(): Promise<ProductionItem[]> {
     return new Promise<ProductionItem[]>((resolve, reject) => {
       try {
         this.clientPg.query(selectAllProduction, (err, res) => {
@@ -42,7 +42,7 @@ export class MovementService {
     });
   }
 
-  async getPendingItems(): Promise<ProductionItem[]> {
+  async selectPendingItems(): Promise<ProductionItem[]> {
     return new Promise<ProductionItem[]>((resolve, reject) => {
       try {
         this.clientPg.query(selectAllPending, (err, res) => {
@@ -57,7 +57,7 @@ export class MovementService {
       }
     });
   }
-  async getFailedItems(): Promise<ProductionItem[]> {
+  async selectFailedItems(): Promise<ProductionItem[]> {
     return new Promise<ProductionItem[]>((resolve, reject) => {
       try {
         this.clientPg.query(selectAllfailed, (err, res) => {
@@ -73,7 +73,7 @@ export class MovementService {
     });
   }
 
-  async postProduction(productionItem: ProductionItem): Promise<string> {
+  async insertProductionItem(productionItem: ProductionItem): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       const client = this.clientPg;
       try {
@@ -92,6 +92,7 @@ export class MovementService {
           status,
         } = productionItem;
 
+        console.log(productionItem)
         await client.query(insertProduction, [
           productCode,
           lot,
@@ -110,12 +111,12 @@ export class MovementService {
       } catch (error) {
         // Revertir la transacción en caso de error
         await client.query('ROLLBACK');
-        reject('Error inserting StockMovement and Items:' + error);
+        reject('Error inserting Production Item:' + error);
       }
     });
   }
 
-  async postPending(pendingItem: PendingItem): Promise<string> {
+  async insertPendingItem(pendingItem: PendingItemDTO): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       const client = this.clientPg;
       try {
@@ -157,7 +158,7 @@ export class MovementService {
     });
   }
 
-  async postBroken(failedItems: FailedItemsDto): Promise<string> {
+  async insertBrokenItem(failedItems: FailedItemsDto): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       const client = this.clientPg;
       try {

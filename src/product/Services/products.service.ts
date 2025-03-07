@@ -52,28 +52,9 @@ export class ProductService {
     })
     //console.log(orderExample)
   }
-
-  
-  insertStockMovement(product: StockMovement) {
-    
-    const message: Messageitem = {
-      messageId: product.messageID,
-      messageDate: product.messageDate,
-      messageType: product.messageType,
-      messageUserID: product.messageUserID,
-      movementOrder: {
-        logisticsCenter: product.movementOrder.logisticsCenter
-      }, 
-      status: 'created'
-    };
-
-    this.clientPg.query(insertMovementQuery);
-    this.insertItems(product);
-
-  }
   
 
-  async insertItems(stockMovement: StockMovement): Promise<void> {
+  async insertStockMovement(stockMovement: StockMovement): Promise<void> {
     const client = this.clientPg;
     //console.log(StockMovement)
     try {

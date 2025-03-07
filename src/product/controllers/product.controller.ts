@@ -50,7 +50,7 @@ export class ProductController {
     return this.products.getItems();
   }
 
-  /////---------------------Stock Movement-----------------------------////
+  /////---------------------POST Stock Movement-----------------------------////
   @Post('/BIQ/stockMovement')
   @ApiOperation({ summary: 'Insert the list of products from BIQ' })
   @HttpCode(200)
@@ -70,6 +70,7 @@ export class ProductController {
     description: 'Internal Server Error. Connection error.',
   })
   postProductsBIQ(@Body() payload: StockMovementDTO) {
-    return this.products.insertItems(payload);
+    console.log('Stock Movement', payload)
+    return this.products.insertStockMovement(payload);
   }
 }

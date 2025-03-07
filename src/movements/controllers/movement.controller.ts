@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, Res, Put, ValidationPipe } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { MessageDto } from 'src/messages/models/messages.model';
 import { PendingItem, ProductionItem } from '../models/movements.model';
@@ -28,8 +28,8 @@ export class MovementController {
     type: MessageDto,
     description: 'Internal Server Error. Connection error.',
   })
-  getAllProduction(@Body() payload: ProductionItemDTO) {
-    return this.movementService.getProductionItems();
+  getAllProduction() {
+    return this.movementService.selectProductionItems();
   }
   
   @Get('/pending')
@@ -97,30 +97,31 @@ export class MovementController {
     type: MessageDto,
     description: 'Internal Server Error. Connection error.',
   })
-  postPending(@Body() payload: PendingItem) {
-    //return this.products.getProductsBIQ();
+  postPending(@Body() payload: PendingItemDTO) {
+    return this.movementService.insertPendingItem(payload);
   }
   
   //--------PRODUCTION----------------------//
   @Post('/production')
-  @ApiOperation({ summary: 'Inserts the products generated in production' })
+  @ApiOperation({ summary: 'Insert the list of products from BIQ' })
   @HttpCode(200)
   @ApiResponse({
     status: 200,
-    type: MessageDto,
+    type: ProductionItemDTO,
+    description: 'Successfully inserted the product',
   })
   @ApiResponse({
     status: 400,
     type: MessageDto,
-    description: 'Bad request please check body structure.',
+    description: 'Bad request, please check the body structure.',
   })
   @ApiResponse({
     status: 500,
     type: MessageDto,
     description: 'Internal Server Error. Connection error.',
   })
-  postProduction(@Body() payload: ProductionItem) {
-    //return this.products.getProductsBIQ();
+  postProduction(@Body() payload: ProductionItemDTO) {
+    return this.movementService.insertProductionItem(payload);
   }
   
   //--------BROKEN----------------------//
@@ -142,7 +143,7 @@ export class MovementController {
         description: 'Internal Server Error. Connection error.',
       })
       postBroken(@Body() payload: FailedItemsDto) {
-        //return this.products.getProductsBIQ();
+        return this.movementService.insertBrokenItem(payload);
       }
 
 
@@ -187,7 +188,7 @@ export class MovementController {
         description: 'Internal Server Error. Connection error.',
       })
       putProduction(@Param() payload: ProductionItemDTO) {
-        //return this.products.getProductsBIQ();
+        //return this.movementService.updateProduction(payload);
       }
 
 }

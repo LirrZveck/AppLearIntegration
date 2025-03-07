@@ -6,12 +6,13 @@ import { ProductModule } from './product/product.module';
 import { envs } from './config';
 import { MovementsModule } from './movements/movements.module';
 
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: true,
+      forbidNonWhitelisted: false,
     }),
   );
   //-----------------------SWAGGER------------------------------
