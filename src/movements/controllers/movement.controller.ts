@@ -1,9 +1,9 @@
 import { Body, Controller, Get, HttpCode, Param, Post, Res, Put, ValidationPipe } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { MessageDto } from 'src/messages/models/messages.model';
 import { PendingItem, ProductionItem } from '../models/movements.model';
 import { MovementService } from '../services/movement.service';
 import { FailedItemsDto, PendingItemDTO, ProductionItemDTO } from '../dtos/movement.dto';
+import { MessageDto } from 'src/messages/dtos/messages.dto';
 
 @Controller('movement')
 export class MovementController {
@@ -16,7 +16,7 @@ export class MovementController {
   @HttpCode(200)
   @ApiResponse({
     status: 200,
-    type: MessageDto,
+    type: ProductionItemDTO,
   })
   @ApiResponse({
     status: 400,

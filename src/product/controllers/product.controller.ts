@@ -1,8 +1,8 @@
 import { Body, Controller, Get, HttpCode, Param, Post, Res } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ProductService } from '../Services/products.service';
-import { Message, MessageDto } from 'src/messages/models/messages.model';
 import { ItemDTO, StockMovementDTO } from '../dtos/order.dto';
+import { MessageDto } from 'src/messages/dtos/messages.dto';
 
 @Controller('Products')
 export class ProductController {

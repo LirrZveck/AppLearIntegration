@@ -31,10 +31,29 @@ export class MessagesService {
     const messageResult = new Message();
     messageResult.error = 'Internal Server Error';
     messageResult.message = [
-      `Service Unavailable, Please Contact Tics Support`,
+      `Service Unavailable, Please Contact Support`,
     ];
-    messageResult.error = `Internal Server Error`;
     messageResult.statusCode = 503;
+    return messageResult;
+  }
+
+  internalServerError(){
+    const messageResult = new Message();
+    messageResult.error = 'Internal Server Error';
+    messageResult.message = [
+      `Service Unavailable, Please Contact Support`,
+    ];
+    messageResult.statusCode = 503;
+    return messageResult;
+  }
+
+  generalError(error: any, message: string){
+    const messageResult = new Message();
+    messageResult.error = error;
+    messageResult.message = [
+      message,
+    ];
+    messageResult.statusCode = 500;
     return messageResult;
   }
 

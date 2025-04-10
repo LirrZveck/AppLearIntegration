@@ -7,6 +7,7 @@ import { Client } from 'pg';
 import { Messageitem } from 'src/messages/models/messagesItem.model';
 import { StockMovement } from '../models/produc.model';
 import { insertItemQuery, insertMovementQuery, selectAllItems, selectAllMovements} from '../sql/sqlStatements'
+import { Message } from 'src/messages/models/messages.model';
 
 @Injectable()
 export class ProductService {
@@ -17,16 +18,17 @@ export class ProductService {
 
   //-------------------GET LIST OF ALL ITEMS----------------------------//
   async getAllMovements() {
-    return new Promise<StockMovement[]>((resolve,reject)=>{
+    return new Promise<StockMovement[]| Message>((resolve,reject)=>{
       try {
        this.clientPg.query(selectAllMovements, (err, res)=>{
           if(err){
-            reject (err)
+            reject (this.messages.errorExcuteQuery('Postgrest', err.toString()))
           }
           console.log(res.rows)
           resolve (res.rows);
         });
       } catch (error) {
+        reject (this.messages.internalServerError())
       }
      
 
@@ -36,17 +38,17 @@ export class ProductService {
 
 
   async getItems() {
-    return new Promise<StockMovement[]>((resolve,reject)=>{
+    return new Promise<StockMovement[]|Message>((resolve,reject)=>{
       try {
         this.clientPg.query(selectAllItems, (err, res)=>{
           if(err){
-            reject (err)
+            reject (this.messages.errorExcuteQuery('Postgrest', err.toString()))
           }
           console.log(res.rows)
           resolve (res.rows);
         });
       } catch (error) {
-        reject(error)
+        reject(this.messages.internalServerError())
       }
 
     })
@@ -54,7 +56,7 @@ export class ProductService {
   }
   
 
-  async insertStockMovement(stockMovement: StockMovement): Promise<void> {
+  async insertStockMovement(stockMovement: StockMovement): Promise<Message> {
     const client = this.clientPg;
     //console.log(StockMovement)
     try {
@@ -99,7 +101,8 @@ export class ProductService {
       // Revertir la transacción en caso de error
       await client.query('ROLLBACK');
       console.error('Error inserting StockMovement and Items:', error);
-      throw error;
+      return this.messages.generalError(error, 'Error inserting StockMovement and Items')
+      //throw error;
     }
     
   }
