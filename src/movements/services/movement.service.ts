@@ -90,6 +90,7 @@ export class MovementService {
           warehouse,
           messageId,
           status,
+          createDate,
         } = productionItem;
 
         console.log(productionItem)
@@ -103,6 +104,7 @@ export class MovementService {
           warehouse,
           messageId,
           status,
+          createDate
         ]);
 
         // Confirma la transacción
@@ -133,6 +135,7 @@ export class MovementService {
           warehouse,
           messageId,
           status,
+          createDate
         } = pendingItem;
 
         await client.query(insertPending, [
@@ -145,6 +148,7 @@ export class MovementService {
           warehouse,
           messageId,
           status,
+          createDate
         ]);
 
         // Confirma la transacción
@@ -175,6 +179,7 @@ export class MovementService {
           warehouse,
           messageId,
           status,
+          createDate
         } = failedItems;
 
         await client.query(insertPending, [
@@ -187,6 +192,7 @@ export class MovementService {
           warehouse,
           messageId,
           status,
+          createDate
         ]);
 
         // Confirma la transacción

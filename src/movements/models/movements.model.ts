@@ -8,6 +8,7 @@ export class ProductionItem {
     readonly warehouse: string; 
     readonly messageId: string;
     readonly status: boolean;
+    readonly createDate: Date;
   }
 
 export class PendingItem {
@@ -20,6 +21,7 @@ export class PendingItem {
     readonly warehouse: string;
     readonly messageId: string;
     readonly status: boolean;
+    readonly createDate: Date;
   }
 
 
@@ -33,5 +35,6 @@ export class PendingItem {
     readonly warehouse: string;
     readonly messageId: string;
     readonly status: boolean;
+    readonly createDate: Date;
   }
 

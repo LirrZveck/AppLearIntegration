@@ -66,6 +66,14 @@ export class ProductionItemDTO {
   })
   @IsBoolean()
   readonly status: boolean;
+ 
+  @ApiProperty({
+    description: 'Fecha registro',
+    example: "2025-12-31",
+  })
+  @IsDate()
+  @Type(() => Date)
+  readonly createDate: Date;
 }
 
 export class PendingItemDTO {
@@ -132,6 +140,14 @@ export class PendingItemDTO {
   })
   @IsBoolean()
   readonly status: boolean;
+
+  @ApiProperty({
+    description: 'Fecha registro',
+    example: "2025-12-31",
+  })
+  @IsDate()
+  @Type(() => Date)
+  readonly createDate: Date;
 }
 
 export class FailedItemsDto {
@@ -198,4 +214,13 @@ export class FailedItemsDto {
   })
   @IsBoolean()
   readonly status: boolean;
+
+  
+  @ApiProperty({
+    description: 'Fecha registro',
+    example: "2025-12-31",
+  })
+  @IsDate()
+  @Type(() => Date)
+  readonly createDate: Date;
 }
