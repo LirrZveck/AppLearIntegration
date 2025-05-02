@@ -8,6 +8,7 @@ export class StockMovement {
     logisticsCenter: string;
   };
   items: Array<Item>;
+  status: boolean;
 }
 
 export class Item {
@@ -17,5 +18,5 @@ export class Item {
   readonly quantity: number;  
   readonly expiredDate: Date; //GS1VALIDADE DD/MM/AA/
   readonly cum: string; //GS1CUM
-  readonly warehouse: string; 
+  readonly warehouse: string;
 }

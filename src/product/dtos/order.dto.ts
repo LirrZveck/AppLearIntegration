@@ -1,4 +1,4 @@
-import { IsString, IsDate, IsNumber, IsArray, ValidateNested } from 'class-validator';
+import { IsString, IsDate, IsNumber, IsArray, ValidateNested, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ItemDTO {
@@ -52,4 +52,7 @@ export class StockMovementDTO {
   @ValidateNested({ each: true })
   @Type(() => ItemDTO)
   readonly items: Array<ItemDTO>;
+  
+  @IsBoolean()
+  readonly status: boolean;
 }

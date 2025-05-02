@@ -31,8 +31,8 @@ sm.message_id = $1`;
 //--------------------------------------------INSERCIONES-----------------------------------------------------------//
 // Inserta en la tabla stockMovement
 export const insertMovementQuery = `
-      INSERT INTO stock_movement (message_id, message_date, message_type, message_user_id, logistics_center)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO stock_movement (message_id, message_date, message_type, message_user_id, logistics_center,status)
+      VALUES ($1, $2, $3, $4, $5, $6)
     `;
 
 // Inserta los items asociados

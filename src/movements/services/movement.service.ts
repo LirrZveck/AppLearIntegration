@@ -80,6 +80,7 @@ export class MovementService {
         // Inicia una transacción
         await this.clientPg.query('BEGIN');
 
+        
         const {
           productCode,
           lot,

@@ -89,4 +89,12 @@ export class MessagesService {
     //messageResult.payload = null;
     return messageResult;
   }
+
+  statusOk(): Message {
+    const messageResult = new Message();
+    messageResult.message = [`Process execute succesfull`];
+    messageResult.statusCode = 200;
+    //messageResult.payload = null;
+    return messageResult;
+  }
 }

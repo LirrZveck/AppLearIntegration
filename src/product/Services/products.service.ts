@@ -70,6 +70,7 @@ export class ProductService {
         messageUserID,
         movementOrder,
         items,
+        status
       } = stockMovement;
 
       await client.query(insertMovementQuery, [
@@ -78,6 +79,7 @@ export class ProductService {
         messageType,
         messageUserID,
         movementOrder.logisticsCenter,
+        status
       ]);
 
     for (const item of items) {
@@ -88,8 +90,7 @@ export class ProductService {
         item.quantity,
         item.expiredDate,
         item.cum,
-        item.warehouse,
-        //"H159",
+        item.warehouse, //"H159",
         messageID, // Relaciona el item con el movimiento
       ]);
     }
@@ -97,6 +98,7 @@ export class ProductService {
       // Confirma la transacción
       await client.query('COMMIT');
       console.log('StockMovement and Items inserted successfully.');
+      return this.messages.statusOk()
     } catch (error) {
       // Revertir la transacción en caso de error
       await client.query('ROLLBACK');
