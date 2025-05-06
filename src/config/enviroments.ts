@@ -1,4 +1,4 @@
-import { envs } from "./envs";
+import { envs } from './envs';
 
 export enum Environments {
   Development = 'development',
@@ -13,5 +13,5 @@ export const environmentFiles: Record<Environments, string> = {
   [Environments.Production]: '.prod.env',
   [Environments.Live]: '.live.env',
 };
-
-export const envFilePath = environmentFiles[envs.enviroment as Environments] || '.env';
+export const envFilePath =
+  environmentFiles[envs.ENVIRONMENT as Environments] || '.env';
