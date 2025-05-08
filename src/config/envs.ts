@@ -40,6 +40,6 @@ export const envs = {
   password: envVars.PGPASSWORD,
   database: envVars.PGDATABASE,
   user: envVars.PGUSER,
-  ENVIRONMENT: envVars.ENVIRONMENT, // ✅ Aquí debe estar con mayúsculas
+  ENVIROMENT: envVars.ENVIRONMENT, // ✅ Aquí debe estar con mayúsculas
   appport: envVars.APPPORT,
 };

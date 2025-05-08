@@ -90,7 +90,7 @@ export class MessagesService {
     return messageResult;
   }
 
-  statusOk(): Message {
+  statusOk(message: string): Message {
     const messageResult = new Message();
     messageResult.message = [`Process execute succesfull`];
     messageResult.statusCode = 200;

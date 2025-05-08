@@ -14,4 +14,4 @@ export const environmentFiles: Record<Environments, string> = {
   [Environments.Live]: '.live.env',
 };
 export const envFilePath =
-  environmentFiles[envs.ENVIRONMENT as Environments] || '.env';
+  environmentFiles[envs.ENVIROMENT as Environments] || '.env';

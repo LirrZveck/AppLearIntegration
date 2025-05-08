@@ -37,6 +37,12 @@ export const insertMovementQuery = `
 
 // Inserta los items asociados
 export const insertItemQuery = `
-      INSERT INTO item (product_code, lot, description, quantity, expired_date, cum, warehouse, stock_movement_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      INSERT INTO item (product_code, lot, description, quantity, expired_date, cum, warehouse, stock_movement_id, status_prod)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     `;
+    
+    
+    //--------------------------------------------ACTUALIAZCIONES-----------------------------------------------------------//
+export const updateItemQuery = `
+      UPDATE item SET status_prod = ($1) WHERE product_code = ($2) AND lot = ($3);
+        `;

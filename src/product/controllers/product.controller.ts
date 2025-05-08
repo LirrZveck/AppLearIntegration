@@ -1,8 +1,18 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Res } from '@nestjs/common';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  Put,
+  Res,
+} from '@nestjs/common';
+import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { ProductService } from '../Services/products.service';
 import { ItemDTO, StockMovementDTO } from '../dtos/order.dto';
 import { MessageDto } from 'src/messages/dtos/messages.dto';
+import { Item } from '../models/produc.model';
 
 @Controller('Products')
 export class ProductController {
@@ -27,7 +37,6 @@ export class ProductController {
   })
   getMovements() {
     return this.products.getAllMovements();
-
   }
   @Get('/BIQ/items')
   @ApiOperation({ summary: 'List all items from all stocks_movement inserted' })
@@ -57,7 +66,7 @@ export class ProductController {
   @ApiResponse({
     status: 200,
     type: StockMovementDTO,
-    description: ''
+    description: '',
   })
   @ApiResponse({
     status: 400,
@@ -70,7 +79,46 @@ export class ProductController {
     description: 'Internal Server Error. Connection error.',
   })
   postProductsBIQ(@Body() payload: StockMovementDTO) {
-    console.log('Stock Movement', payload)
+    //console.log('Stock Movement', payload)
     return this.products.insertStockMovement(payload);
+  }
+
+  /////---------------------UPDATE Item-----------------------------////
+  @Put('/BIQ/statusproductitem')
+  @ApiParam({
+    name: 'productCode',
+    type: String,
+    description: 'Product Code',
+  })
+  @ApiParam({ name: 'lot', type: String, description: 'Product Lot' })
+  @ApiParam({
+    name: 'status',
+    type: Boolean,
+    description: 'Product status (true o false)',
+  })
+  @ApiOperation({ summary: 'Update status Item by Product Code and Lot' })
+  @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    type: MessageDto,
+    description: '',
+  })
+  @ApiResponse({
+    status: 400,
+    type: MessageDto,
+    description: 'Bad request please check body structure.',
+  })
+  @ApiResponse({
+    status: 500,
+    type: MessageDto,
+    description: 'Internal Server Error. Connection error.',
+  })
+  putItem(
+    @Param('productCode') productCode: string,
+    @Param('lot') lot: string,
+    @Param('status') status: boolean,
+  ) {
+    //console.log('Stock Movement', payload)
+    return this.products.putItemByCode(productCode, lot, status);
   }
 }

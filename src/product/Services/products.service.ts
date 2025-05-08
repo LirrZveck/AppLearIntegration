@@ -5,12 +5,13 @@ import { MessagesService } from 'src/messages/services/messages/messages.service
 //Interno
 import { Client } from 'pg';
 import { Messageitem } from 'src/messages/models/messagesItem.model';
-import { StockMovement } from '../models/produc.model';
+import { Item, StockMovement } from '../models/produc.model';
 import {
   insertItemQuery,
   insertMovementQuery,
   selectAllItems,
   selectAllMovements,
+  updateItemQuery,
 } from '../sql/sqlStatements';
 import { Message } from 'src/messages/models/messages.model';
 
@@ -65,7 +66,7 @@ export class ProductService {
     //console.log(orderExample)
   }
 
-  async insertStockMovement(stockMovement: StockMovement): Promise<Message> {
+  async insertStockMovement(stockMovement: StockMovementDTO): Promise<Message> {
     const client = this.clientPg;
     //console.log(StockMovement)
     try {
@@ -101,13 +102,14 @@ export class ProductService {
           item.cum,
           item.warehouse, //"H159",
           messageID, // Relaciona el item con el movimiento
+          true,
         ]);
       }
 
       // Confirma la transacción
       await client.query('COMMIT');
       console.log('StockMovement and Items inserted successfully.');
-      return this.messages.statusOk();
+      return this.messages.statusOk('StockMovement and Items inserted successfully.');
     } catch (error) {
       // Revertir la transacción en caso de error
       await client.query('ROLLBACK');
@@ -117,6 +119,35 @@ export class ProductService {
         'Error inserting StockMovement and Items',
       );
       //throw error;
+    }
+  }
+
+
+  async putItemByCode( productCode: string, lot: string, status: boolean){
+    const client = this.clientPg;
+    try{
+      // Inicia una transacción
+      await this.clientPg.query('BEGIN');
+
+
+      await client.query(updateItemQuery, [
+        status,
+        productCode,
+        lot
+      ]);
+      // Confirma la transacción
+      await client.query('COMMIT');
+      console.log('Update Item successfully.');
+      return this.messages.statusOk('Update Item successfully.');
+    }catch(error){
+      await client.query('ROLLBACK');
+      console.error(`Error updating Items ${productCode}`, error);
+      return this.messages.generalError(
+        error,
+        `Error updating Items ${productCode}`,
+      );
+    }finally {
+
     }
   }
 }

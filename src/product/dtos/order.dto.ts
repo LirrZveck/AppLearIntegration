@@ -23,6 +23,9 @@ export class ItemDTO {
 
   @IsString()
   readonly warehouse: string;
+
+  @IsBoolean()
+  readonly status_prod: boolean;
 }
 
 export class MovementOrderDTO {

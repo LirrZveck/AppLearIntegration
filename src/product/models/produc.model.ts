@@ -19,4 +19,5 @@ export class Item {
   readonly expiredDate: Date; //GS1VALIDADE DD/MM/AA/
   readonly cum: string; //GS1CUM
   readonly warehouse: string;
+  readonly status: boolean;
 }
