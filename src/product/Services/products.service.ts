@@ -11,6 +11,7 @@ import {
   insertMovementQuery,
   selectAllItems,
   selectAllMovements,
+  selectItemsActive,
   updateItemQuery,
 } from '../sql/sqlStatements';
 import { Message } from 'src/messages/models/messages.model';
@@ -53,6 +54,23 @@ export class ProductService {
     return new Promise<StockMovement[] | Message>((resolve, reject) => {
       try {
         this.clientPg.query(selectAllItems, (err, res) => {
+          if (err) {
+            reject(this.messages.errorExcuteQuery('Postgrest', err.toString()));
+          }
+          console.log(res.rows);
+          resolve(res.rows);
+        });
+      } catch (error) {
+        reject(this.messages.internalServerError());
+      }
+    });
+    //console.log(orderExample)
+  }
+
+  async getItemsActive() {
+    return new Promise<StockMovement[] | Message>((resolve, reject) => {
+      try {
+        this.clientPg.query(selectItemsActive, (err, res) => {
           if (err) {
             reject(this.messages.errorExcuteQuery('Postgrest', err.toString()));
           }

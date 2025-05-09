@@ -2,6 +2,8 @@
 //----------------------------------------CONSULTAS-----------------------------------------------------------//
 //Consulta todos los items ingresados
 export const selectAllItems = `SELECT * FROM public.item`;
+
+export const selectItemsActive = `SELECT * FROM public.item WHERE status_prod = true`;
 //Consulta todos los sotckMovement ingresados
 export const selectAllMovements = `SELECT * FROM public.stock_movement`;
 //Consulta los articulos ingresados por stock_movement

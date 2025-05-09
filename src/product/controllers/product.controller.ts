@@ -57,6 +57,27 @@ export class ProductController {
   })
   getAllItems() {
     return this.products.getItems();
+  
+  }
+  @Get('/BIQ/itemsactive')
+  @ApiOperation({ summary: 'List items active from all stocks_movement inserted' })
+  @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    type: ItemDTO,
+  })
+  @ApiResponse({
+    status: 400,
+    type: MessageDto,
+    description: 'Bad request please check body structure.',
+  })
+  @ApiResponse({
+    status: 500,
+    type: MessageDto,
+    description: 'Internal Server Error. Connection error.',
+  })
+  getItemsActive() {
+    return this.products.getItemsActive();
   }
 
   /////---------------------POST Stock Movement-----------------------------////
