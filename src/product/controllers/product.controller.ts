@@ -1,19 +1,20 @@
+// src\product\controllers\products.controller.ts
+
 import {
   Body,
   Controller,
   Get,
   HttpCode,
-  Param,
   Post,
   Put,
-  Res,
+  Param,
 } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ProductService } from '../Services/products.service';
 import { ItemDTO, StockMovementDTO } from '../dtos/order.dto';
 import { MessageDto } from 'src/messages/dtos/messages.dto';
-import { Item } from '../models/produc.model';
 
+@ApiTags('Products')
 @Controller('Products')
 export class ProductController {
   constructor(private readonly products: ProductService) {}
@@ -21,125 +22,122 @@ export class ProductController {
   @Get('/BIQ/stockMovement')
   @ApiOperation({ summary: 'Result of stock movement from BIQ' })
   @HttpCode(200)
-  @ApiResponse({
-    status: 200,
-    type: StockMovementDTO,
-  })
-  @ApiResponse({
-    status: 400,
-    type: MessageDto,
-    description: 'Bad request please check body structure.',
-  })
-  @ApiResponse({
-    status: 500,
-    type: MessageDto,
-    description: 'Internal Server Error. Connection error.',
-  })
+  @ApiResponse({ status: 200, type: StockMovementDTO })
   getMovements() {
     return this.products.getAllMovements();
   }
+
   @Get('/BIQ/items')
   @ApiOperation({ summary: 'List all items from all stocks_movement inserted' })
   @HttpCode(200)
-  @ApiResponse({
-    status: 200,
-    type: ItemDTO,
-  })
-  @ApiResponse({
-    status: 400,
-    type: MessageDto,
-    description: 'Bad request please check body structure.',
-  })
-  @ApiResponse({
-    status: 500,
-    type: MessageDto,
-    description: 'Internal Server Error. Connection error.',
-  })
+  @ApiResponse({ status: 200, type: ItemDTO })
   getAllItems() {
     return this.products.getItems();
-  
-  }
-  @Get('/BIQ/itemsactive')
-  @ApiOperation({ summary: 'List items active from all stocks_movement inserted' })
-  @HttpCode(200)
-  @ApiResponse({
-    status: 200,
-    type: ItemDTO,
-  })
-  @ApiResponse({
-    status: 400,
-    type: MessageDto,
-    description: 'Bad request please check body structure.',
-  })
-  @ApiResponse({
-    status: 500,
-    type: MessageDto,
-    description: 'Internal Server Error. Connection error.',
-  })
-  getItemsActive() {
-    return this.products.getItemsActive();
   }
 
-  /////---------------------POST Stock Movement-----------------------------////
   @Post('/BIQ/stockMovement')
   @ApiOperation({ summary: 'Insert the list of products from BIQ' })
   @HttpCode(200)
-  @ApiResponse({
-    status: 200,
-    type: StockMovementDTO,
-    description: '',
-  })
-  @ApiResponse({
-    status: 400,
-    type: MessageDto,
-    description: 'Bad request please check body structure.',
-  })
-  @ApiResponse({
-    status: 500,
-    type: MessageDto,
-    description: 'Internal Server Error. Connection error.',
-  })
+  @ApiResponse({ status: 200, type: StockMovementDTO })
   postProductsBIQ(@Body() payload: StockMovementDTO) {
-    //console.log('Stock Movement', payload)
     return this.products.insertStockMovement(payload);
   }
 
-  /////---------------------UPDATE Item-----------------------------////
   @Put('/BIQ/statusproductitem')
-  @ApiParam({
-    name: 'productCode',
-    type: String,
-    description: 'Product Code',
-  })
-  @ApiParam({ name: 'lot', type: String, description: 'Product Lot' })
-  @ApiParam({
-    name: 'status',
-    type: Boolean,
-    description: 'Product status (true o false)',
-  })
   @ApiOperation({ summary: 'Update status Item by Product Code and Lot' })
   @HttpCode(200)
-  @ApiResponse({
-    status: 200,
-    type: MessageDto,
-    description: '',
-  })
-  @ApiResponse({
-    status: 400,
-    type: MessageDto,
-    description: 'Bad request please check body structure.',
-  })
-  @ApiResponse({
-    status: 500,
-    type: MessageDto,
-    description: 'Internal Server Error. Connection error.',
-  })
-  putItem(
-    @Param('productCode') productCode: string,
-    @Param('lot') lot: string,
-    @Param('status') status: boolean,
+  @ApiResponse({ status: 200, type: MessageDto })
+  putItem(@Body() body: { productCode: string; lot: string; status: boolean }) {
+    console.log(
+      `🛠️ Datos recibidos: productCode=${body.productCode}, lot=${body.lot}, status=${body.status}`,
+    );
+    return this.products.putItemByCode(body.productCode, body.lot, body.status);
+  }
+
+  @Get('/BIQ/produccionPendiente')
+  @ApiOperation({ summary: 'List all pending production items' })
+  @HttpCode(200)
+  @ApiResponse({ status: 200, type: ItemDTO })
+  getProduccionPendiente() {
+    return this.products.getPendingItems();
+  }
+
+  @Post('/BIQ/start-production')
+  @ApiOperation({ summary: 'Mueve un item a producción activa.' })
+  @HttpCode(200)
+  @ApiResponse({ status: 200, type: MessageDto })
+  async startProduction(
+    @Body()
+    body: {
+      productCode: string;
+      lot: string;
+      source: 'item' | 'pending_item'; // <-- AÑADIR ESTO
+    },
   ) {
-    //console.log('Stock Movement', payload)
-    return this.products.putItemByCode(productCode, lot, status);
+    console.log(
+      `🚀 Solicitud de inicio de producción para: ${body.productCode}, Origen: ${body.source}`,
+    );
+    return this.products.moveToInicioProduccion(
+      body.productCode,
+      body.lot,
+      body.source,
+    );
+  }
+
+  // --- NUEVO ENDPOINT: Obtener el producto actualmente en producción ---
+  @Get('/BIQ/inProductionItem')
+  @ApiOperation({ summary: 'Retrieve the single item currently in production' })
+  @HttpCode(200)
+  @ApiResponse({ status: 200, type: ItemDTO }) // Devolverá un solo ítem o null/vacío
+  async getInProductionItem() {
+    console.log('🔍 Solicitud para obtener el ítem en producción.');
+    return this.products.getInProductionItem();
+  }
+  // --- FIN NUEVO ENDPOINT ---
+
+  @Get('/getProductionReports')
+  @ApiOperation({ summary: 'Retrieve all production reports' })
+  @HttpCode(200)
+  getProductionReports() {
+    return this.products.getProductionReports();
+  }
+
+  @Post('/saveProductionReport')
+  @ApiOperation({ summary: 'Save production report' })
+  @HttpCode(201)
+  saveProductionReport(
+    @Body()
+    reportData: {
+      product_code: string;
+      description: string;
+      total_produced: number;
+      damaged_quantity: number;
+      remaining_products: number;
+    },
+  ) {
+    return this.products.saveProductionReport(reportData);
+  }
+
+  @Post('/BIQ/finalize-production')
+  @ApiOperation({
+    summary:
+      'Finaliza una producción, moviendo el producto a su estado final (finalizado o pendiente).',
+  })
+  @HttpCode(200)
+  @ApiResponse({ status: 200, type: MessageDto })
+  async finalizeProduction(
+    @Body()
+    body: {
+      productCode: string;
+      lot: string;
+      originalQuantity: number;
+      netQuantity: number;
+      damagedQuantity: number;
+    },
+  ) {
+    console.log(
+      `🎬 Solicitud de finalización para: ${body.productCode} - Lote: ${body.lot}`,
+    );
+    return this.products.finalizeProduction(body);
   }
 }
