@@ -1,10 +1,8 @@
-// src\product\Services\products.service.ts
-import { Inject, Injectable, Res } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { StockMovementDTO } from '../dtos/order.dto';
 import { MessagesService } from 'src/messages/services/messages/messages.service';
 import { PendingItemDTO } from '../../movements/dtos/movement.dto';
 import { Client } from 'pg';
-import { Messageitem } from 'src/messages/models/messagesItem.model';
 import { Item, StockMovement, ProductionItem } from '../models/produc.model';
 import {
   insertItemQuery,
@@ -18,7 +16,7 @@ import {
   selectCurrentInProductionItem,
   insertInProductionItem,
   deleteInProductionItem,
-  updateItemToAvailable,
+  updateItemQuantityAndStatus,
   insertIntoFinalizados,
 } from '../sql/sqlStatements';
 import { Message } from 'src/messages/models/messages.model';
@@ -48,14 +46,11 @@ export class ProductService {
           LEFT JOIN item i ON sm.message_id = i.stock_movement_id
           GROUP BY sm.message_id, sm.message_date, sm.message_type, sm.message_user_id, sm.logistics_center;
         `;
-
         this.clientPg.query(query, (err, res) => {
-          if (err) {
+          if (err)
             reject(
               this.messages.errorExcuteQuery('PostgreSQL', err.toString()),
             );
-          }
-          console.log('📌 Respuesta de API con `items` incluidos:', res.rows);
           resolve(res.rows);
         });
       } catch (error) {
@@ -68,10 +63,8 @@ export class ProductService {
     return new Promise<StockMovement[] | Message>((resolve, reject) => {
       try {
         this.clientPg.query(selectAllItems, (err, res) => {
-          if (err) {
+          if (err)
             reject(this.messages.errorExcuteQuery('Postgrest', err.toString()));
-          }
-          console.log(res.rows);
           resolve(res.rows);
         });
       } catch (error) {
@@ -83,7 +76,7 @@ export class ProductService {
   async insertStockMovement(stockMovement: StockMovementDTO): Promise<Message> {
     const client = this.clientPg;
     try {
-      await this.clientPg.query('BEGIN');
+      await client.query('BEGIN');
       const {
         messageID,
         messageDate,
@@ -93,7 +86,6 @@ export class ProductService {
         items,
         status,
       } = stockMovement;
-
       await client.query(insertMovementQuery, [
         messageID,
         messageDate,
@@ -102,7 +94,6 @@ export class ProductService {
         movementOrder.logisticsCenter,
         status,
       ]);
-
       for (const item of items) {
         await client.query(insertItemQuery, [
           item.productCode,
@@ -116,15 +107,12 @@ export class ProductService {
           true,
         ]);
       }
-
       await client.query('COMMIT');
-      console.log('StockMovement and Items inserted successfully.');
       return this.messages.statusOk(
         'StockMovement and Items inserted successfully.',
       );
     } catch (error) {
       await client.query('ROLLBACK');
-      console.error('Error inserting StockMovement and Items:', error);
       return this.messages.generalError(
         error,
         'Error inserting StockMovement and Items',
@@ -140,19 +128,14 @@ export class ProductService {
     const client = this.clientPg;
     try {
       await client.query('BEGIN');
-
       if (status === true) {
         const updateQuery = `UPDATE item SET status_prod = $1 WHERE product_code = $2 AND lot = $3`;
         await client.query(updateQuery, [status, productCode, lot]);
-        console.log(
-          `✅ Estado actualizado a ${status} para ${productCode} - Lote: ${lot}`,
-        );
         await client.query('COMMIT');
         return this.messages.statusOk(`Item actualizado correctamente.`);
       } else {
-        const selectItemQuery = `SELECT id, product_code, lot, description, quantity, expired_date, cum, warehouse, stock_movement_id, status_prod, created_at FROM item WHERE product_code = $1 AND lot = $2`;
+        const selectItemQuery = `SELECT * FROM item WHERE product_code = $1 AND lot = $2`;
         const result = await client.query(selectItemQuery, [productCode, lot]);
-
         if (result.rows.length === 0) {
           await client.query('ROLLBACK');
           return this.messages.generalError(
@@ -160,7 +143,6 @@ export class ProductService {
             'Producto no encontrado en la tabla item para mover.',
           );
         }
-
         const itemToMove = result.rows[0];
         const pendingItemDto: PendingItemDTO = {
           productCode: itemToMove.product_code,
@@ -174,14 +156,9 @@ export class ProductService {
           status: true,
           createDate: new Date(),
         };
-
         await this.moveToPendingItem(pendingItemDto);
-        console.log(`✅ Producto movido a pending_item: ${productCode}`);
-
         const deleteItemQuery = `DELETE FROM item WHERE product_code = $1 AND lot = $2`;
         await client.query(deleteItemQuery, [productCode, lot]);
-        console.log(`✅ Producto eliminado de item: ${productCode}`);
-
         await client.query('COMMIT');
         return this.messages.statusOk(
           `Item movido a producción pendiente y eliminado de item.`,
@@ -189,7 +166,6 @@ export class ProductService {
       }
     } catch (error) {
       await client.query('ROLLBACK');
-      console.error(`❌ Error al procesar el ítem ${productCode}`, error);
       return this.messages.generalError(
         error,
         `Error al mover/actualizar el ítem ${productCode}`,
@@ -202,25 +178,11 @@ export class ProductService {
       const result = await this.clientPg.query(selectAllPendingSql);
       return result.rows;
     } catch (error) {
-      console.error('Error obteniendo ítems pendientes:', error);
       throw new Error('Error al recuperar ítems de producción pendiente');
     }
   }
 
   async saveProductionReport(reportData: ProductionReport) {
-    if (!reportData?.product_code || !reportData?.description) {
-      throw new Error(
-        'Datos del reporte incompletos: product_code y description son requeridos',
-      );
-    }
-
-    if (
-      typeof reportData.total_produced !== 'number' ||
-      reportData.total_produced < 0
-    ) {
-      throw new Error('total_produced debe ser un número positivo');
-    }
-
     try {
       const result = await this.clientPg.query(insertProductionReport, [
         reportData.product_code,
@@ -241,7 +203,6 @@ export class ProductService {
       const result = await this.clientPg.query(selectProductionReports);
       return result.rows;
     } catch (error) {
-      console.error('Error obteniendo reportes:', error);
       throw new Error('Error al recuperar reportes de producción');
     }
   }
@@ -262,7 +223,6 @@ export class ProductService {
       ]);
       return 'Item moved to pending successfully';
     } catch (error) {
-      console.error('Error moving to pending:', error);
       throw new Error(`Failed to move item: ${error.message}`);
     }
   }
@@ -271,12 +231,8 @@ export class ProductService {
     const client = this.clientPg;
     try {
       const result = await client.query(selectCurrentInProductionItem);
-      if (result.rows.length > 0) {
-        return result.rows[0];
-      }
-      return null;
+      return result.rows.length > 0 ? result.rows[0] : null;
     } catch (error) {
-      console.error('❌ Error al obtener el ítem en producción:', error);
       throw new Error('Error al recuperar el ítem en producción.');
     }
   }
@@ -289,15 +245,11 @@ export class ProductService {
     const client = this.clientPg;
     try {
       await client.query('BEGIN');
-
       let productToMove: any;
-      let sourceQuery: string;
-
-      if (source === 'pending_item') {
-        sourceQuery = `SELECT * FROM pending_item WHERE product_code = $1 AND lot = $2;`;
-      } else {
-        sourceQuery = `SELECT * FROM item WHERE product_code = $1 AND lot = $2;`;
-      }
+      const sourceQuery =
+        source === 'pending_item'
+          ? `SELECT * FROM pending_item WHERE product_code = $1 AND lot = $2;`
+          : `SELECT * FROM item WHERE product_code = $1 AND lot = $2;`;
 
       const sourceResult = await client.query(sourceQuery, [productCode, lot]);
       if (sourceResult.rows.length === 0) {
@@ -313,27 +265,7 @@ export class ProductService {
       if (currentInProductionResult.rows.length > 0) {
         const oldProductInProduction: ProductionItem =
           currentInProductionResult.rows[0];
-        await client.query(deleteInProductionItem, [oldProductInProduction.id]);
-
-        if (oldProductInProduction.originalSourceTable === 'pending_item') {
-          await client.query(insertPending, [
-            oldProductInProduction.productCode,
-            oldProductInProduction.lot,
-            oldProductInProduction.description,
-            oldProductInProduction.quantity,
-            oldProductInProduction.expiredDate,
-            oldProductInProduction.cum,
-            oldProductInProduction.warehouse,
-            oldProductInProduction.messageId,
-            true,
-            oldProductInProduction.createdate,
-          ]);
-        } else if (oldProductInProduction.originalSourceTable === 'item') {
-          await client.query(updateItemToAvailable, [
-            oldProductInProduction.productCode,
-            oldProductInProduction.lot,
-          ]);
-        }
+        // Aquí iría la lógica para devolver el 'oldProductInProduction' a su origen si es necesario
       }
 
       await client.query(insertInProductionItem, [
@@ -350,13 +282,16 @@ export class ProductService {
         source,
       ]);
 
-      let deleteQuery: string;
       if (source === 'pending_item') {
-        deleteQuery = `DELETE FROM pending_item WHERE product_code = $1 AND lot = $2;`;
+        const deleteQuery = `DELETE FROM pending_item WHERE product_code = $1 AND lot = $2;`;
+        await client.query(deleteQuery, [productCode, lot]);
       } else {
-        deleteQuery = `DELETE FROM item WHERE product_code = $1 AND lot = $2;`;
+        const updateQuery = `UPDATE item SET status_prod = false WHERE product_code = $1 AND lot = $2;`;
+        await client.query(updateQuery, [productCode, lot]);
+        console.log(
+          `✅ Ítem ${productCode} marcado como no disponible (en producción).`,
+        );
       }
-      await client.query(deleteQuery, [productCode, lot]);
 
       await client.query('COMMIT');
       return this.messages.statusOk(
@@ -364,25 +299,24 @@ export class ProductService {
       );
     } catch (error) {
       await client.query('ROLLBACK');
-      console.error(`❌ Error al mover producto a 'production_item':`, error);
       return this.messages.generalError(error, `Error al iniciar producción.`);
     }
   }
 
-  // --- FUNCIÓN ACTUALIZADA CON LA LÓGICA DE NEGOCIO CORREGIDA ---
   async finalizeProduction(data: {
     productCode: string;
     lot: string;
     originalQuantity: number;
-    netQuantity: number;
+    quantityToProcess: number;
     damagedQuantity: number;
+    pendingQuantity: number;
   }): Promise<Message> {
     const client = this.clientPg;
     try {
       await client.query('BEGIN');
 
       const itemEnProduccionResult = await client.query(
-        `SELECT * FROM production_item WHERE product_code = $1 AND lot = $2 AND status = TRUE`,
+        `SELECT * FROM production_item WHERE product_code = $1 AND lot = $2`,
         [data.productCode, data.lot],
       );
 
@@ -397,16 +331,61 @@ export class ProductService {
         itemData.id,
       ]);
 
-      if (data.netQuantity > 0) {
-        // Si quedan unidades netas, el lote vuelve a pendientes.
-        console.log(
-          `⚠️ Producción con remanente (${data.netQuantity} unidades). Moviendo a produccionpendiente...`,
-        );
+      const initialRemainder = data.originalQuantity - data.quantityToProcess;
+      const totalRemainder = initialRemainder + data.pendingQuantity;
+      const netProduction =
+        data.quantityToProcess - data.damagedQuantity - data.pendingQuantity;
+
+      if (totalRemainder > 0) {
+        if (itemData.original_source_table === 'item') {
+          await client.query(updateItemQuantityAndStatus, [
+            totalRemainder,
+            itemData.product_code,
+            itemData.lot,
+          ]);
+        } else {
+          await this.moveToPendingItem({
+            productCode: itemData.product_code,
+            lot: itemData.lot,
+            description: itemData.description,
+            quantity: totalRemainder,
+            expiredDate: new Date(itemData.expired_date),
+            cum: itemData.cum,
+            warehouse: itemData.warehouse,
+            messageId: itemData.message_id,
+            status: true,
+            createDate: new Date(),
+          });
+        }
+      } else {
+        if (itemData.original_source_table === 'item') {
+          console.log(
+            `✅ Lote finalizado. Moviendo a 'productos_finalizados'.`,
+          );
+          await client.query(insertIntoFinalizados, [
+            itemData.product_code,
+            itemData.lot,
+            itemData.description,
+            data.originalQuantity,
+            netProduction,
+            data.damagedQuantity,
+            itemData.expired_date,
+            itemData.cum,
+            itemData.warehouse,
+          ]);
+
+          console.log(`🗑️ Eliminando lote consumido de la tabla 'item'.`);
+          const deleteQuery = `DELETE FROM item WHERE product_code = $1 AND lot = $2;`;
+          await client.query(deleteQuery, [data.productCode, data.lot]);
+        }
+      }
+
+      if (data.damagedQuantity > 0) {
         await this.moveToPendingItem({
           productCode: itemData.product_code,
           lot: itemData.lot,
-          description: itemData.description,
-          quantity: data.netQuantity,
+          description: `${itemData.description} (DAÑADO)`,
+          quantity: data.damagedQuantity,
           expiredDate: new Date(itemData.expired_date),
           cum: itemData.cum,
           warehouse: itemData.warehouse,
@@ -414,31 +393,22 @@ export class ProductService {
           status: true,
           createDate: new Date(),
         });
-      } else {
-        // Si la producción neta es 0, el lote se considera finalizado.
-        console.log(
-          `✅ Producción neta es 0. Moviendo a productos_finalizados...`,
-        );
-        await client.query(insertIntoFinalizados, [
-          itemData.product_code,
-          itemData.lot,
-          itemData.description,
-          data.originalQuantity,
-          data.netQuantity,
-          data.damagedQuantity,
-          itemData.expired_date,
-          itemData.cum,
-          itemData.warehouse,
-        ]);
       }
+
+      await client.query(insertProductionReport, [
+        itemData.product_code,
+        itemData.description,
+        netProduction,
+        data.damagedQuantity,
+        totalRemainder,
+      ]);
 
       await client.query('COMMIT');
       return this.messages.statusOk(
-        'Producción finalizada y registrada correctamente.',
+        'Producción finalizada. Inventario y reportes actualizados.',
       );
     } catch (error) {
       await client.query('ROLLBACK');
-      console.error('❌ Error al finalizar la producción:', error);
       return this.messages.generalError(
         error,
         'Error al finalizar la producción.',

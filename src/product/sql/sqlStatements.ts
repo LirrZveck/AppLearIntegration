@@ -27,6 +27,11 @@ export const selectAllItems = `
   FROM item;
 `;
 
+// --- Se creo para reinsertar un item en caso de que haya un sobrante inicial ---
+export const updateItemQuantityAndStatus = `
+  UPDATE item SET quantity = $1, status_prod = TRUE 
+  WHERE product_code = $2 AND lot = $3;
+`;
 // --- Pending Item queries ---
 export const insertPending = `
   INSERT INTO pending_item (product_code, lot, description, quantity, expired_date, cum, warehouse, message_id, status, createdate)

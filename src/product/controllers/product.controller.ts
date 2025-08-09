@@ -1,4 +1,4 @@
-// src\product\controllers\products.controller.ts
+// src/product/controllers/products.controller.ts
 
 import {
   Body,
@@ -71,7 +71,7 @@ export class ProductController {
     body: {
       productCode: string;
       lot: string;
-      source: 'item' | 'pending_item'; // <-- AÑADIR ESTO
+      source: 'item' | 'pending_item';
     },
   ) {
     console.log(
@@ -84,16 +84,14 @@ export class ProductController {
     );
   }
 
-  // --- NUEVO ENDPOINT: Obtener el producto actualmente en producción ---
   @Get('/BIQ/inProductionItem')
   @ApiOperation({ summary: 'Retrieve the single item currently in production' })
   @HttpCode(200)
-  @ApiResponse({ status: 200, type: ItemDTO }) // Devolverá un solo ítem o null/vacío
+  @ApiResponse({ status: 200, type: ItemDTO })
   async getInProductionItem() {
     console.log('🔍 Solicitud para obtener el ítem en producción.');
     return this.products.getInProductionItem();
   }
-  // --- FIN NUEVO ENDPOINT ---
 
   @Get('/getProductionReports')
   @ApiOperation({ summary: 'Retrieve all production reports' })
@@ -131,8 +129,9 @@ export class ProductController {
       productCode: string;
       lot: string;
       originalQuantity: number;
-      netQuantity: number;
+      quantityToProcess: number; // <-- ÚNICO CAMBIO REALIZADO AQUÍ
       damagedQuantity: number;
+      pendingQuantity: number; // <-- Campo que faltaba
     },
   ) {
     console.log(
