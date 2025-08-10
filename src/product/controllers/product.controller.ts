@@ -13,7 +13,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ProductService } from '../Services/products.service';
 import { ItemDTO, StockMovementDTO } from '../dtos/order.dto';
 import { MessageDto } from 'src/messages/dtos/messages.dto';
-import { Item } from '../models/produc.model';
+import { Item, ProductionItem } from '../models/produc.model';
 
 @ApiTags('Products')
 @Controller('Products')
@@ -42,17 +42,6 @@ export class ProductController {
   @ApiResponse({ status: 200, type: StockMovementDTO })
   postProductsBIQ(@Body() payload: StockMovementDTO) {
     return this.products.insertStockMovement(payload);
-  }
-
-  @Put('/BIQ/statusproductitem')
-  @ApiOperation({ summary: 'Update status Item by Product Code and Lot' })
-  @HttpCode(200)
-  @ApiResponse({ status: 200, type: MessageDto })
-  putItem(@Body() body: { productCode: string; lot: string; status: boolean }) {
-    console.log(
-      `🛠️ Datos recibidos: productCode=${body.productCode}, lot=${body.lot}, status=${body.status}`,
-    );
-    return this.products.putItemByCode(body.productCode, body.lot, body.status);
   }
 
   @Get('/BIQ/produccionPendiente')
@@ -126,7 +115,7 @@ export class ProductController {
   @ApiResponse({ status: 200, type: MessageDto })
   async finalizeProduction(
     @Body()
-    item: Item,
+    item: ProductionItem,
     originalQuantity: number,
     quantityToProcess: number,
     damagedQuantity: number,

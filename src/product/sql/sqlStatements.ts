@@ -143,7 +143,7 @@ export const selectFromItem = `SELECT * FROM item WHERE product_code = $1 AND lo
 
 export const selectFromPendingItems = `SELECT * FROM pending_item WHERE product_code = $1 AND lot = $2;`;
 
-export const updatePendingItemToFalse = `UPDATE pending_item status WHERE product_code = $1 AND lot = $2`;
+export const updatePendingItemToFalse = `UPDATE pending_item status = false WHERE product_code = $1 AND lot = $2`;
 
 export const updateItemToFalse = `UPDATE item SET status_prod = false WHERE product_code = $1 AND lot = $2`;
 
