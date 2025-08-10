@@ -106,6 +106,8 @@ export class ProductController {
     return this.products.saveProductionReport(reportData);
   }
 
+  // En: src\product\controllers\product.controller.ts
+
   @Post('/BIQ/finalize-production')
   @ApiOperation({
     summary:
@@ -115,16 +117,27 @@ export class ProductController {
   @ApiResponse({ status: 200, type: MessageDto })
   async finalizeProduction(
     @Body()
-    item: ProductionItem,
-    originalQuantity: number,
-    quantityToProcess: number,
-    damagedQuantity: number,
-    pendingQuantity: number
-    ,
+    payload: {
+      productCode: string;
+      lot: string;
+      originalQuantity: number;
+      quantityToProcess: number;
+      damagedQuantity: number;
+      pendingQuantity: number;
+    },
   ) {
     console.log(
-      `🎬 Solicitud de finalización para: ${item.productCode} - Lote: ${item.lot}`,
+      `🎬 Solicitud de finalización para: ${payload.productCode} - Lote: ${payload.lot}`,
     );
-    return this.products.finalizeProduction(item, originalQuantity, quantityToProcess, damagedQuantity, pendingQuantity );
+
+    // Ahora pasamos las propiedades del payload directamente al servicio
+    return this.products.finalizeProduction(
+      payload.productCode,
+      payload.lot,
+      payload.originalQuantity,
+      payload.quantityToProcess,
+      payload.damagedQuantity,
+      payload.pendingQuantity,
+    );
   }
 }

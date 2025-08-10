@@ -1,14 +1,27 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Res, Put, ValidationPipe } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  Res,
+  Put,
+  ValidationPipe,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PendingItem, ProductionItem } from '../models/movements.model';
 import { MovementService } from '../services/movement.service';
-import { FailedItemsDto, PendingItemDTO, ProductionItemDTO } from '../dtos/movement.dto';
+import {
+  FailedItemsDto,
+  PendingItemDTO,
+  ProductionItemDTO,
+} from '../dtos/movement.dto';
 import { MessageDto } from 'src/messages/dtos/messages.dto';
 
 @Controller('movement')
 export class MovementController {
-
-  constructor(private readonly movementService: MovementService ){}
+  constructor(private readonly movementService: MovementService) {}
 
   //------------------------------------GET------------------------------------------//
   @Get('/production')
@@ -31,7 +44,7 @@ export class MovementController {
   getAllProduction() {
     return this.movementService.selectProductionItems();
   }
-  
+
   @Get('/pending')
   @ApiOperation({ summary: 'Consult List of Pending Items' })
   @HttpCode(200)
@@ -73,10 +86,6 @@ export class MovementController {
   getFailed(@Body() payload: PendingItemDTO) {
     //return this.products.getProductsBIQ();
   }
-  
-
-
-
 
   //------------------------------------POST---------------------------------------------------//
   //--------PENDING----------------------//
@@ -100,7 +109,7 @@ export class MovementController {
   postPending(@Body() payload: PendingItemDTO) {
     return this.movementService.insertPendingItem(payload);
   }
-  
+
   //--------PRODUCTION----------------------//
   @Post('/production')
   @ApiOperation({ summary: 'Insert the list of products from BIQ' })
@@ -123,7 +132,7 @@ export class MovementController {
   postProduction(@Body() payload: ProductionItemDTO) {
     return this.movementService.insertProductionItem(payload);
   }
-  
+
   //--------BROKEN----------------------//
   @Post('/failed')
   @ApiOperation({ summary: 'Insert Items Failed from a Production' })
@@ -132,63 +141,60 @@ export class MovementController {
     status: 200,
     type: MessageDto,
   })
-      @ApiResponse({
-        status: 400,
-        type: MessageDto,
-        description: 'Bad request please check body structure.',
-      })
-      @ApiResponse({
-        status: 500,
-        type: MessageDto,
-        description: 'Internal Server Error. Connection error.',
-      })
-      postBroken(@Body() payload: FailedItemsDto) {
-        return this.movementService.insertBrokenItem(payload);
-      }
+  @ApiResponse({
+    status: 400,
+    type: MessageDto,
+    description: 'Bad request please check body structure.',
+  })
+  @ApiResponse({
+    status: 500,
+    type: MessageDto,
+    description: 'Internal Server Error. Connection error.',
+  })
+  postBroken(@Body() payload: FailedItemsDto) {
+    return this.movementService.insertBrokenItem(payload);
+  }
 
-
-  
   //------------------------------------PUTT---------------------------------------------------//
-      @Put('/pendingInactive')
-      @ApiOperation({ summary: 'Insert Items Pending from a Production' })
-      @HttpCode(200)
-      @ApiResponse({
-        status: 200,
-        type: MessageDto,
-      })
-      @ApiResponse({
-        status: 400,
-        type: MessageDto,
-        description: 'Bad request please check body structure.',
-      })
-      @ApiResponse({
-        status: 500,
-        type: MessageDto,
-        description: 'Internal Server Error. Connection error.',
-      })
-      putPending(@Param() product: PendingItemDTO) {
-        //return this.products.getProductsBIQ();
-      }
+  @Put('/pendingInactive')
+  @ApiOperation({ summary: 'Insert Items Pending from a Production' })
+  @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    type: MessageDto,
+  })
+  @ApiResponse({
+    status: 400,
+    type: MessageDto,
+    description: 'Bad request please check body structure.',
+  })
+  @ApiResponse({
+    status: 500,
+    type: MessageDto,
+    description: 'Internal Server Error. Connection error.',
+  })
+  putPending(@Param() product: PendingItemDTO) {
+    //return this.products.getProductsBIQ();
+  }
 
-      @Put('/productionInactive')
-      @ApiOperation({ summary: 'Inserts the products generated in production' })
-      @HttpCode(200)
-      @ApiResponse({
-        status: 200,
-        type: MessageDto,
-      })
-      @ApiResponse({
-        status: 400,
-        type: MessageDto,
-        description: 'Bad request please check body structure.',
-      })
-      @ApiResponse({
-        status: 500,
-        type: MessageDto,
-        description: 'Internal Server Error. Connection error.',
-      })
-      putProduction(@Param() payload: ProductionItemDTO) {
-        //return this.movementService.updateProduction(payload);
-      }
-
+  @Put('/productionInactive')
+  @ApiOperation({ summary: 'Inserts the products generated in production' })
+  @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    type: MessageDto,
+  })
+  @ApiResponse({
+    status: 400,
+    type: MessageDto,
+    description: 'Bad request please check body structure.',
+  })
+  @ApiResponse({
+    status: 500,
+    type: MessageDto,
+    description: 'Internal Server Error. Connection error.',
+  })
+  putProduction(@Param() payload: ProductionItemDTO) {
+    //return this.movementService.updateProduction(payload);
+  }
 }

@@ -17,30 +17,30 @@ export const insertProduction = `
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `;
 export const insertPending = `
-      INSERT INTO public.pending_item (produc_code, lot, description, quantity, expired_date, cum, warehouse, message_id, status, createdate)
-      VALUES ($1, $2, $3, $4, $5, $6, $7 $8, $9, $10)
+      INSERT INTO public.pending_item (product_code, lot, description, quantity, expired_date, cum, warehouse, message_id, status, createdate)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `;
 export const insertFailed = `
-      INSERT INTO public.failed_item (produc_code, lot, description, quantity, expired_date, cum, warehouse, message_id, status, createdate)
-      VALUES ($1, $2, $3, $4, $5, $6, $7 $8, $9, $10)
+      INSERT INTO public.failed_item (product_code, lot, description, quantity, expired_date, cum, warehouse, message_id, status, createdate)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `;
 
 // Inserta los items asociados
 export const updateItemProductionProcessQuery = `
     UPDATE production_item SET status = false
     WHERE 
-    message_id = $1; 
+    message_id = $1 
     AND product_code = $2
     `;
 export const updateItemPendingProcessQuery = `
     UPDATE production_item SET status = false
     WHERE 
-    message_id = $1; 
+    message_id = $1 
     AND product_code = $2
     `;
 export const updateItemFailedProcessQuery = `
     UPDATE production_item SET status = false
     WHERE 
-    message_id = $1; 
+    message_id = $1 
     AND product_code = $2
     `;

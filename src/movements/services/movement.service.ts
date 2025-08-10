@@ -2,10 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Item, StockMovement } from 'src/product/models/produc.model';
 import { HttpService } from '@nestjs/axios';
 
-import {
-  PendingItem,
-  ProductionItem,
-} from '../models/movements.model';
+import { PendingItem, ProductionItem } from '../models/movements.model';
 import { Message } from 'src/messages/models/messages.model';
 import { MessagesService } from 'src/messages/services/messages/messages.service';
 import { Client } from 'pg';
@@ -16,7 +13,11 @@ import {
   selectAllPending,
   selectAllProduction,
 } from '../sql/sqlMovementStatements';
-import { FailedItemsDto, PendingItemDTO, ProductionItemDTO } from '../dtos/movement.dto';
+import {
+  FailedItemsDto,
+  PendingItemDTO,
+  ProductionItemDTO,
+} from '../dtos/movement.dto';
 
 @Injectable()
 export class MovementService {
@@ -80,7 +81,6 @@ export class MovementService {
         // Inicia una transacción
         await this.clientPg.query('BEGIN');
 
-        
         const {
           productCode,
           lot,
@@ -94,7 +94,7 @@ export class MovementService {
           createDate,
         } = productionItem;
 
-        console.log(productionItem)
+        console.log(productionItem);
         await client.query(insertProduction, [
           productCode,
           lot,
@@ -105,7 +105,7 @@ export class MovementService {
           warehouse,
           messageId,
           status,
-          createDate
+          createDate,
         ]);
 
         // Confirma la transacción
@@ -136,7 +136,7 @@ export class MovementService {
           warehouse,
           messageId,
           status,
-          createDate
+          createDate,
         } = pendingItem;
 
         await client.query(insertPending, [
@@ -149,7 +149,7 @@ export class MovementService {
           warehouse,
           messageId,
           status,
-          createDate
+          createDate,
         ]);
 
         // Confirma la transacción
@@ -180,7 +180,7 @@ export class MovementService {
           warehouse,
           messageId,
           status,
-          createDate
+          createDate,
         } = failedItems;
 
         await client.query(insertPending, [
@@ -193,7 +193,7 @@ export class MovementService {
           warehouse,
           messageId,
           status,
-          createDate
+          createDate,
         ]);
 
         // Confirma la transacción
@@ -206,9 +206,4 @@ export class MovementService {
       }
     });
   }
-
-
-  
-
-  
 }
