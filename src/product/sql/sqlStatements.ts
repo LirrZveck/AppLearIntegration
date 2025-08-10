@@ -31,9 +31,15 @@ export const selectAllItems = `
   FROM item;
 `;
 
-// --- Se creo para reinsertar un item en caso de que haya un sobrante inicial ---
+// --- Se creo para actualizar un item en caso de que haya un sobrante inicial ---
 export const updateItemQuantityAndStatus = `
   UPDATE item SET quantity = $1, status_prod = $2 
+  WHERE product_code = $3 AND lot = $4;
+`;
+
+// --- Se creo para reinsertar un Pending item en caso de que haya un sobrante inicial ---
+export const updatePendingItemQuantityAndStatus = `
+  UPDATE pending_item SET quantity = $1, status_prod = $2 
   WHERE product_code = $3 AND lot = $4;
 `;
 // --- Pending Item queries ---

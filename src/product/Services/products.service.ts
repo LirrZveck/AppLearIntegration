@@ -21,6 +21,7 @@ import {
   updatePendingItemToFalse,
   updateItemToFalse,
   selectProdItemByCodeAndLot,
+  updatePendingItemQuantityAndStatus,
 } from '../sql/sqlStatements';
 import { Message } from 'src/messages/models/messages.model';
 import { MovementService } from 'src/movements/services/movement.service';
@@ -317,7 +318,7 @@ export class ProductService {
     }
   }
 
-  async finalizeProduction(item: Item,  
+  async finalizeProduction(item: ProductionItem,  
     originalQuantity: number,
     quantityToProcess: number,
     damagedQuantity: number,
@@ -370,7 +371,7 @@ export class ProductService {
           break;
         case "pending_item":
           if (totalRemainder===0) {
-            await client.query(updateItemQuantityAndStatus, [
+            await client.query(updatePendingItemQuantityAndStatus, [
             totalRemainder,
             false,
             itemData.product_code,
@@ -378,7 +379,7 @@ export class ProductService {
           ]);
         }
         else{
-            await client.query(updateItemQuantityAndStatus, [
+            await client.query(updatePendingItemQuantityAndStatus, [
             totalRemainder,
             true,
             itemData.product_code,
@@ -389,16 +390,23 @@ export class ProductService {
       }
 
       //Insertar los items da;ados y los producidos
+          const pendingItem: Item = {
+            ...itemData
+          }
+          pendingItem.quantity = pendingQuantity;
+          this.movementService.insertPendingItem(pendingItem)
 
-          item.quantity = pendingQuantity;
-          this.movementService.insertPendingItem(item)
+          const finishedItem: Item = {
+            ...itemData
+          }
+          finishedItem.quantity = netProduction;
+          this.movementService.insertProductionItem(finishedItem);
 
-
-          item.quantity = netProduction;
-          this.movementService.insertProductionItem(item);
-
-          item.quantity = damagedQuantity;
-          this.movementService.insertBrokenItem(item)
+          const failedItem: Item = {
+            ...itemData
+          }
+          failedItem.quantity = damagedQuantity;
+          this.movementService.insertBrokenItem(failedItem)
 
         await client.query(insertProductionReport, [
         itemData.product_code,
