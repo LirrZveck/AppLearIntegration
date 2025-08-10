@@ -7,6 +7,10 @@ export const insertMovementQuery = `
   RETURNING *;
 `;
 
+export const selectProdItemByCodeAndLot = `SELECT * FROM production_item WHERE product_code = $1 AND lot = $2`;
+
+export const deleteProductionItem = `DELETE FROM production_item WHERE id = $1`;
+
 export const selectAllMovements = `
   SELECT sm.message_id, sm.message_date, sm.message_type, sm.message_user_id, sm.logistics_center,
          json_agg(i.*) AS items
@@ -29,8 +33,8 @@ export const selectAllItems = `
 
 // --- Se creo para reinsertar un item en caso de que haya un sobrante inicial ---
 export const updateItemQuantityAndStatus = `
-  UPDATE item SET quantity = $1, status_prod = TRUE 
-  WHERE product_code = $2 AND lot = $3;
+  UPDATE item SET quantity = $1, status_prod = $2 
+  WHERE product_code = $3 AND lot = $4;
 `;
 // --- Pending Item queries ---
 export const insertPending = `
@@ -120,10 +124,21 @@ export const updateItemToAvailable = `
   UPDATE public.item SET status_prod = TRUE WHERE product_code = $1 AND lot = $2;
 `;
 
-export const insertIntoFinalizados = `
-  INSERT INTO productos_finalizados (
-    product_code, lot, description, quantity_initial, quantity_produced, quantity_damaged, expired_date, cum, warehouse
+export const insertFinishedItems = `
+  INSERT INTO finished_production_items (
+    product_code, lot, description, quantity, expired_date, cum, warehouse, message_id, status, create_date
   )
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
   RETURNING *;
 `;
+
+
+export const selectFromItem = `SELECT * FROM item WHERE product_code = $1 AND lot = $2`;
+
+export const selectFromPendingItems = `SELECT * FROM pending_item WHERE product_code = $1 AND lot = $2;`;
+
+export const updatePendingItemToFalse = `UPDATE pending_item status WHERE product_code = $1 AND lot = $2`;
+
+export const updateItemToFalse = `UPDATE item SET status_prod = false WHERE product_code = $1 AND lot = $2`;
+
+

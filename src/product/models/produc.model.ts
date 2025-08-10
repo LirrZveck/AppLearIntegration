@@ -11,14 +11,16 @@ export class StockMovement {
 }
 
 export class Item {
-  readonly productCode: string; //GS1EAN
-  readonly lot: string; //GS1LOTE
-  readonly description: string; //
-  readonly quantity: number;
-  readonly expiredDate: Date; //GS1VALIDADE DD/MM/AA/
-  readonly cum: string; //GS1CUM
-  readonly warehouse: string;
-  readonly status: boolean; // Asumiendo que esto se refiere al status_prod de la DB
+  productCode: string; //GS1EAN
+  lot: string; //GS1LOTE
+  description: string; //
+  quantity: number;
+  expiredDate: Date; //GS1VALIDADE DD/MM/AA/
+  cum: string; //GS1CUM
+  warehouse: string;
+  messageId: string;
+  status: boolean; // Asumiendo que esto se refiere al status_prod de la DB
+  createDate: Date;
 }
 
 export class ProductionItem {

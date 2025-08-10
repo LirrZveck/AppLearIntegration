@@ -9,6 +9,7 @@ import { MessagesService } from 'src/messages/services/messages/messages.service
 @Module({
   imports: [HttpModule, MessagesModule],
   controllers: [MovementController],
-  providers: [MovementService, MessagesService]
+  providers: [MovementService, MessagesService],
+  exports: [MovementService]
 })
 export class MovementsModule {}

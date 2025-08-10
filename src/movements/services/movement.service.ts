@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { StockMovement } from 'src/product/models/produc.model';
+import { Item, StockMovement } from 'src/product/models/produc.model';
 import { HttpService } from '@nestjs/axios';
 
 import {
@@ -119,7 +119,7 @@ export class MovementService {
     });
   }
 
-  async insertPendingItem(pendingItem: PendingItemDTO): Promise<string> {
+  async insertPendingItem(pendingItem: Item): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       const client = this.clientPg;
       try {
@@ -206,4 +206,9 @@ export class MovementService {
       }
     });
   }
+
+
+  
+
+  
 }

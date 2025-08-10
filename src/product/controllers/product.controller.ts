@@ -13,6 +13,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ProductService } from '../Services/products.service';
 import { ItemDTO, StockMovementDTO } from '../dtos/order.dto';
 import { MessageDto } from 'src/messages/dtos/messages.dto';
+import { Item } from '../models/produc.model';
 
 @ApiTags('Products')
 @Controller('Products')
@@ -125,18 +126,16 @@ export class ProductController {
   @ApiResponse({ status: 200, type: MessageDto })
   async finalizeProduction(
     @Body()
-    body: {
-      productCode: string;
-      lot: string;
-      originalQuantity: number;
-      quantityToProcess: number; // <-- ÚNICO CAMBIO REALIZADO AQUÍ
-      damagedQuantity: number;
-      pendingQuantity: number; // <-- Campo que faltaba
-    },
+    item: Item,
+    originalQuantity: number,
+    quantityToProcess: number,
+    damagedQuantity: number,
+    pendingQuantity: number
+    ,
   ) {
     console.log(
-      `🎬 Solicitud de finalización para: ${body.productCode} - Lote: ${body.lot}`,
+      `🎬 Solicitud de finalización para: ${item.productCode} - Lote: ${item.lot}`,
     );
-    return this.products.finalizeProduction(body);
+    return this.products.finalizeProduction(item, originalQuantity, quantityToProcess, damagedQuantity, pendingQuantity );
   }
 }

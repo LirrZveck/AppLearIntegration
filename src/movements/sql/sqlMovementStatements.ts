@@ -13,7 +13,7 @@ export const selectAllfailedActive = `SELECT * FROM public.failed_item where sta
 //--------------------------------------------INSERCIONES-----------------------------------------------------------//
 // Inserta en la tabla production_item
 export const insertProduction = `
-      INSERT INTO public.production_item (product_code, lot, description, quantity, expired_date, cum, warehouse, message_id, status, createdate)
+      INSERT INTO public.finished_production_items (product_code, lot, description, quantity, expired_date, cum, warehouse, message_id, status, createdate)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `;
 export const insertPending = `

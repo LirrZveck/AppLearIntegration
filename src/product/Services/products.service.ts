@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { StockMovementDTO } from '../dtos/order.dto';
 import { MessagesService } from 'src/messages/services/messages/messages.service';
 import { PendingItemDTO } from '../../movements/dtos/movement.dto';
 import { Client } from 'pg';
@@ -17,9 +16,15 @@ import {
   insertInProductionItem,
   deleteInProductionItem,
   updateItemQuantityAndStatus,
-  insertIntoFinalizados,
+  selectFromPendingItems,
+  selectFromItem,
+  updatePendingItemToFalse,
+  updateItemToFalse,
+  selectProdItemByCodeAndLot,
 } from '../sql/sqlStatements';
 import { Message } from 'src/messages/models/messages.model';
+import { MovementService } from 'src/movements/services/movement.service';
+import { StockMovementDTO } from '../dtos/order.dto';
 
 interface ProductionReport {
   product_code: string;
@@ -33,6 +38,7 @@ interface ProductionReport {
 export class ProductService {
   constructor(
     private readonly messages: MessagesService,
+    private readonly movementService: MovementService,    
     @Inject('postgresConnection') private clientPg: Client,
   ) {}
 
@@ -237,6 +243,7 @@ export class ProductService {
     }
   }
 
+
   async moveToInicioProduccion(
     productCode: string,
     lot: string,
@@ -248,8 +255,8 @@ export class ProductService {
       let productToMove: any;
       const sourceQuery =
         source === 'pending_item'
-          ? `SELECT * FROM pending_item WHERE product_code = $1 AND lot = $2;`
-          : `SELECT * FROM item WHERE product_code = $1 AND lot = $2;`;
+          ? selectFromPendingItems
+          : selectFromItem;  
 
       const sourceResult = await client.query(sourceQuery, [productCode, lot]);
       if (sourceResult.rows.length === 0) {
@@ -268,6 +275,7 @@ export class ProductService {
         // Aquí iría la lógica para devolver el 'oldProductInProduction' a su origen si es necesario
       }
 
+      
       await client.query(insertInProductionItem, [
         productToMove.product_code,
         productToMove.lot,
@@ -282,11 +290,17 @@ export class ProductService {
         source,
       ]);
 
-      if (source === 'pending_item') {
-        const deleteQuery = `DELETE FROM pending_item WHERE product_code = $1 AND lot = $2;`;
-        await client.query(deleteQuery, [productCode, lot]);
+
+
+
+      //Se realiza la validacion de las tablas Pending e Items para Validar la cantidad que esta 
+
+      if (source === 'pending_item') {       
+        const updateQuery = updatePendingItemToFalse;
+        await client.query(updateQuery, [productCode, lot]);
       } else {
-        const updateQuery = `UPDATE item SET status_prod = false WHERE product_code = $1 AND lot = $2;`;
+       
+        const updateQuery = updateItemToFalse; 
         await client.query(updateQuery, [productCode, lot]);
         console.log(
           `✅ Ítem ${productCode} marcado como no disponible (en producción).`,
@@ -303,103 +317,94 @@ export class ProductService {
     }
   }
 
-  async finalizeProduction(data: {
-    productCode: string;
-    lot: string;
-    originalQuantity: number;
-    quantityToProcess: number;
-    damagedQuantity: number;
-    pendingQuantity: number;
-  }): Promise<Message> {
+  async finalizeProduction(item: Item,  
+    originalQuantity: number,
+    quantityToProcess: number,
+    damagedQuantity: number,
+    pendingQuantity: number): Promise<Message> {
     const client = this.clientPg;
     try {
+
       await client.query('BEGIN');
 
-      const itemEnProduccionResult = await client.query(
-        `SELECT * FROM production_item WHERE product_code = $1 AND lot = $2`,
-        [data.productCode, data.lot],
+      const itemProductionResult = await client.query(
+        selectProdItemByCodeAndLot,
+        [item.productCode, item.lot],
       );
 
-      if (itemEnProduccionResult.rows.length === 0) {
+      if (itemProductionResult.rows.length === 0) {
         throw new Error(
           'No se encontró el producto en producción activa para finalizar.',
         );
       }
-      const itemData = itemEnProduccionResult.rows[0];
+      const itemData = itemProductionResult.rows[0];
 
-      await client.query(`DELETE FROM production_item WHERE id = $1`, [
+      await client.query(deleteInProductionItem, [  
         itemData.id,
       ]);
 
-      const initialRemainder = data.originalQuantity - data.quantityToProcess;
-      const totalRemainder = initialRemainder + data.pendingQuantity;
-      const netProduction =
-        data.quantityToProcess - data.damagedQuantity - data.pendingQuantity;
+      // Construccion de las cantidades para enviar a cada tabla
 
-      if (totalRemainder > 0) {
-        if (itemData.original_source_table === 'item') {
-          await client.query(updateItemQuantityAndStatus, [
+      const totalRemainder = originalQuantity - quantityToProcess;
+      const netProduction =  quantityToProcess - damagedQuantity - pendingQuantity;
+
+      //Actualizamos la tabla item o pending_item dependiendo si el valor llega o aun hay stock
+      switch (itemData.original_source_table) {
+        case "item":
+        if (totalRemainder===0) {
+            await client.query(updateItemQuantityAndStatus, [
             totalRemainder,
+            false,
             itemData.product_code,
             itemData.lot,
           ]);
-        } else {
-          await this.moveToPendingItem({
-            productCode: itemData.product_code,
-            lot: itemData.lot,
-            description: itemData.description,
-            quantity: totalRemainder,
-            expiredDate: new Date(itemData.expired_date),
-            cum: itemData.cum,
-            warehouse: itemData.warehouse,
-            messageId: itemData.message_id,
-            status: true,
-            createDate: new Date(),
-          });
         }
-      } else {
-        if (itemData.original_source_table === 'item') {
-          console.log(
-            `✅ Lote finalizado. Moviendo a 'productos_finalizados'.`,
-          );
-          await client.query(insertIntoFinalizados, [
+        else{
+            await client.query(updateItemQuantityAndStatus, [
+            totalRemainder,
+            true,
             itemData.product_code,
             itemData.lot,
-            itemData.description,
-            data.originalQuantity,
-            netProduction,
-            data.damagedQuantity,
-            itemData.expired_date,
-            itemData.cum,
-            itemData.warehouse,
           ]);
-
-          console.log(`🗑️ Eliminando lote consumido de la tabla 'item'.`);
-          const deleteQuery = `DELETE FROM item WHERE product_code = $1 AND lot = $2;`;
-          await client.query(deleteQuery, [data.productCode, data.lot]);
         }
+          break;
+        case "pending_item":
+          if (totalRemainder===0) {
+            await client.query(updateItemQuantityAndStatus, [
+            totalRemainder,
+            false,
+            itemData.product_code,
+            itemData.lot,
+          ]);
+        }
+        else{
+            await client.query(updateItemQuantityAndStatus, [
+            totalRemainder,
+            true,
+            itemData.product_code,
+            itemData.lot,
+          ]);
+        }
+          break;
       }
 
-      if (data.damagedQuantity > 0) {
-        await this.moveToPendingItem({
-          productCode: itemData.product_code,
-          lot: itemData.lot,
-          description: `${itemData.description} (DAÑADO)`,
-          quantity: data.damagedQuantity,
-          expiredDate: new Date(itemData.expired_date),
-          cum: itemData.cum,
-          warehouse: itemData.warehouse,
-          messageId: itemData.message_id,
-          status: true,
-          createDate: new Date(),
-        });
-      }
+      //Insertar los items da;ados y los producidos
 
-      await client.query(insertProductionReport, [
+          item.quantity = pendingQuantity;
+          this.movementService.insertPendingItem(item)
+
+
+          item.quantity = netProduction;
+          this.movementService.insertProductionItem(item);
+
+          item.quantity = damagedQuantity;
+          this.movementService.insertBrokenItem(item)
+
+        await client.query(insertProductionReport, [
         itemData.product_code,
         itemData.description,
         netProduction,
-        data.damagedQuantity,
+        damagedQuantity,
         totalRemainder,
       ]);
 
