@@ -10,10 +10,14 @@ export const selectAllPendingActive = `SELECT * FROM public.pending_item where s
 export const selectAllfailed = `SELECT * FROM public.failed_item`;
 export const selectAllfailedActive = `SELECT * FROM public.failed_item where status = true`;
 
+export const selectStockMovementByStockMovementId = `
+  SELECT * FROM public.stock_movement WHERE stock_movement_id = $1;
+`;
+
 //--------------------------------------------INSERCIONES-----------------------------------------------------------//
 // Inserta en la tabla production_item
 export const insertProduction = `
-      INSERT INTO public.finished_production_items (product_code, lot, description, quantity, expired_date, cum, warehouse, message_id, status, createdate)
+      INSERT INTO public.finished_production_items (product_code, lot, description, quantity, expired_date, cum, warehouse, message_id, status, create_date)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `;
 export const insertPending = `

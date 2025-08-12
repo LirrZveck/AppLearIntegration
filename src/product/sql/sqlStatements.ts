@@ -31,16 +31,21 @@ export const selectAllItems = `
   FROM item;
 `;
 
+export const selectAllItemsProduction = `
+  SELECT product_code, lot, description, quantity, expired_date, cum, warehouse, message_id, status, original_source_table
+  FROM production_item;
+`;
+
 // --- Se creo para actualizar un item en caso de que haya un sobrante inicial ---
 export const updateItemQuantityAndStatus = `
   UPDATE item SET quantity = $1, status_prod = $2 
-  WHERE product_code = $3 AND lot = $4;
+  WHERE product_code = $3 AND lot = $4 AND stock_movement_id = $5;
 `;
 
 // --- Se creo para reinsertar un Pending item en caso de que haya un sobrante inicial ---
 export const updatePendingItemQuantityAndStatus = `
   UPDATE pending_item SET quantity = $1, status_prod = $2 
-  WHERE product_code = $3 AND lot = $4;
+  WHERE product_code = $3 AND lot = $4 AND message_id =$5;
 `;
 // --- Pending Item queries ---
 export const insertPending = `
@@ -126,6 +131,8 @@ export const deleteInProductionItem = `
   DELETE FROM public.production_item WHERE id = $1;
 `;
 
+export const truncateProductionItem = `TRUNCATE TABLE production_item RESTART IDENTITY;`;
+
 export const updateItemToAvailable = `
   UPDATE public.item SET status_prod = TRUE WHERE product_code = $1 AND lot = $2;
 `;
@@ -138,9 +145,9 @@ export const insertFinishedItems = `
   RETURNING *;
 `;
 
-export const selectFromItem = `SELECT * FROM item WHERE product_code = $1 AND lot = $2`;
+export const selectFromItem = `SELECT * FROM item WHERE product_code = $1 AND lot = $2 AND status_prod = true;`;
 
-export const selectFromPendingItems = `SELECT * FROM pending_item WHERE product_code = $1 AND lot = $2;`;
+export const selectFromPendingItems = `SELECT * FROM pending_item WHERE product_code = $1 AND lot = $2 AND status = true;`;
 
 export const updatePendingItemToFalse = `UPDATE pending_item SET status = false WHERE product_code = $1 AND lot = $2`;
 

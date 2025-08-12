@@ -7,6 +7,7 @@ import { Message } from 'src/messages/models/messages.model';
 import { MessagesService } from 'src/messages/services/messages/messages.service';
 import { Client } from 'pg';
 import {
+  insertFailed,
   insertPending,
   insertProduction,
   selectAllfailed,
@@ -74,10 +75,11 @@ export class MovementService {
     });
   }
 
-  async insertProductionItem(productionItem: ProductionItem): Promise<string> {
+  async insertProductionItem(productionItem: Item): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       const client = this.clientPg;
       try {
+        console.log(`Insertando items Producidos`)
         // Inicia una transacción
         await this.clientPg.query('BEGIN');
 
@@ -114,6 +116,7 @@ export class MovementService {
       } catch (error) {
         // Revertir la transacción en caso de error
         await client.query('ROLLBACK');
+        console.log(`Error al intentar insertar los productos finalizados ${error}`)
         reject('Error inserting Production Item:' + error);
       }
     });
@@ -125,7 +128,7 @@ export class MovementService {
       try {
         // Inicia una transacción
         await this.clientPg.query('BEGIN');
-
+        console.log(`Insertando items pendientes`)
         const {
           productCode,
           lot,
@@ -163,11 +166,12 @@ export class MovementService {
     });
   }
 
-  async insertBrokenItem(failedItems: FailedItemsDto): Promise<string> {
+  async insertBrokenItem(failedItems: Item): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       const client = this.clientPg;
       try {
         // Inicia una transacción
+        console.log(`Insertando items failed`)
         await this.clientPg.query('BEGIN');
 
         const {
@@ -183,7 +187,7 @@ export class MovementService {
           createDate,
         } = failedItems;
 
-        await client.query(insertPending, [
+        await client.query(insertFailed, [
           productCode,
           lot,
           description,
@@ -198,7 +202,7 @@ export class MovementService {
 
         // Confirma la transacción
         await client.query('COMMIT');
-        resolve('Pending Item inserted successfully.');
+        resolve('Broken Item inserted successfully.');
       } catch (error) {
         // Revertir la transacción en caso de error
         await client.query('ROLLBACK');
@@ -206,4 +210,6 @@ export class MovementService {
       }
     });
   }
+
+
 }
