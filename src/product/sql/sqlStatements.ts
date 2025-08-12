@@ -21,8 +21,8 @@ export const selectAllMovements = `
 
 // --- Item queries ---
 export const insertItemQuery = `
-  INSERT INTO item (product_code, lot, description, quantity, expired_date, cum, warehouse, stock_movement_id, status_prod)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+  INSERT INTO item (product_code, lot, description, quantity, expired_date, cum, warehouse, stock_movement_id, status_prod, created_at)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
   RETURNING *;
 `;
 
