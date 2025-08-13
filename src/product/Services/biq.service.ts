@@ -9,63 +9,75 @@ import axios from 'axios';
 
 @Injectable()
 export class BiqService {
-    constructor( @Inject(forwardRef(() => ProductService))
-                private readonly productService: ProductService,
-                private readonly messages: MessagesService
-    ) {}
+  constructor(
+    @Inject(forwardRef(() => ProductService))
+    private readonly productService: ProductService,
+    private readonly messages: MessagesService,
+  ) {}
 
-    async postStockMovement(item : Item, warehouse: string): Promise< Message|StockMovement[]> {
-        return new Promise<Message>(async (resolve, reject) => {
-          try {
-            //Consultar el stock movement
-            const stockMovement: StockMovement[] | Message = await this.productService.getMovementsById(item.messageId);
+  async postStockMovement(
+    item: Item,
+    warehouse: string,
+  ): Promise<BiqStockMovement | Message> {
+    return new Promise<BiqStockMovement | Message>(async (resolve, reject) => {
+      console.log(`Intentando enviar ${item} a la bodega ${warehouse} de BIQ`);
+      try {
+        //Consultar el stock movement
+        const stockMovement =
+          await this.productService.getMovementsById(item.messageId);
+        //Validamos si la variable stockMovement es un array
+        console.log('Stock movement found:', stockMovement);
+        console.log(`Propiedades de stockMovement`, stockMovement.message_id)
 
-
-            //Validamos si la variable stockMovement es un array
-            if (!Array.isArray(stockMovement)) {
-              console.log('Error: stockMovement is not an array');
-              reject(this.messages.generalError(null, 'Stock movement not found'));
-              return;
-            }
-            console.log('Stock movement found:', stockMovement);
-            const stockMovementBiq: BiqStockMovement = {
-              messageID: stockMovement[0].messageID,
-              messageDate: stockMovement[0].messageDate,
-              messageType: stockMovement[0].messageType,
-              messageUserID: stockMovement[0].messageUserID,
-              movementOrder: {
-                logisticsCenter: stockMovement[0].movementOrder.logisticsCenter
-              },
-              items: [],
-            };
-            // crear la instancia de itemBiq nueva
-            const itemBiq: BiqItem = {
-              itemCode: item.productCode,
-              batch: item.lot,
-              quantity: item.quantity,
-              plus_movement: '', // que dato debe ir aca?
-              minus_movement: '',
-              expDate: item.expiredDate,
-              warehouseCode: warehouse,
-              reference_order_number: ''
-            };
-            //Agregar el itemBiq al array de items
-            stockMovementBiq.items.push(itemBiq);
-            console.log('Stock movement BIQ:', stockMovementBiq);
-            //Enviar el objeto a la api de BIQ por post y axios
-            try {
-              const response = await axios.post('http://192.168.5.143/MAPP_API/mappapi/api/StockMov', stockMovementBiq);
-              resolve(this.messages.statusOk('Stock movement sent to BIQ successfully.'));
-            } catch (error) {
-              reject(this.messages.generalError(error, 'Error sending stock movement to BIQ.'));
-            }
-
-          } catch (error) {
-            reject(this.messages.generalError(error, 'Error processing stock movement for BIQ.'));
-          }
-        });
+        const stockMovementBiq = new BiqStockMovement();
+        stockMovementBiq.messageID = stockMovement.message_id;
+        stockMovementBiq.messageDate = stockMovement.message_date;
+        stockMovementBiq.messageType = stockMovement.message_type;
+        stockMovementBiq.messageUserID = stockMovement.message_user_id;
+        stockMovementBiq.movementOrder = {"logisticsCenter":stockMovement.logistics_center};
+        const itemBiq = new BiqItem();
+        itemBiq.batch = item.lot;
+        itemBiq.itemCode = item.productCode;
+        itemBiq.quantity = item.quantity;
+        itemBiq.plus_movement = '';
+        itemBiq.minus_movement = '';
+        itemBiq.expDate = item.expiredDate;
+        itemBiq.warehouseCode = warehouse;
+        itemBiq.reference_order_number = '';
+        stockMovementBiq.items = [{
+          batch: itemBiq.batch,
+          itemCode: itemBiq.itemCode,
+          quantity: itemBiq.quantity,
+          plus_movement: itemBiq.plus_movement,
+          minus_movement: itemBiq.minus_movement,
+          expDate: itemBiq.expDate,
+          warehouseCode: itemBiq.warehouseCode,
+          reference_order_number: itemBiq.reference_order_number,
+        }];
+        try {
+          console.log('Prepared stock movement for BIQ:', stockMovementBiq);
+          const response = await axios.post(
+            'http://192.168.5.143/MAPP_API/mappapi/api/StockMov',
+            stockMovement,
+          );
+          resolve(this.messages.statusOk('Stock movement sent to BIQ'));
+        } catch (error) {
+          console.log('Error sending stock movement to BIQ:', error);
+          reject(
+            this.messages.generalError(
+              error,
+              'Error sending stock movement to BIQ.',
+            ),
+          );
+        }
+      } catch (error) {
+        reject(
+          this.messages.generalError(
+            error,
+            'Error processing stock movement for BIQ.',
+          ),
+        );
       }
-
-      
-
+    });
+  }
 }

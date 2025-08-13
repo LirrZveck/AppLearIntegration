@@ -96,7 +96,7 @@ export class MovementService {
           createDate,
         } = productionItem;
 
-        console.log(productionItem);
+        //console.log(productionItem);
         await client.query(insertProduction, [
           productCode,
           lot,
@@ -125,6 +125,7 @@ export class MovementService {
   async insertPendingItem(pendingItem: Item): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       const client = this.clientPg;
+      console.log(`Insertando items Pendientes`)
       try {
         // Inicia una transacción
         await this.clientPg.query('BEGIN');

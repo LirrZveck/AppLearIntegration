@@ -1,21 +1,21 @@
 export class BiqStockMovement {
-  messageID: string;
+  messageID: String;
   messageDate: Date;
-  messageType: string;
-  messageUserID: string;
+  messageType: String;
+  messageUserID: String;
   movementOrder: {
-    logisticsCenter: string;
+    logisticsCenter: String;
   };
   items: Array<BiqItem>;
 }
 
 export class BiqItem {
-    itemCode: string;
-    batch: string;
-    quantity: number;
-    plus_movement: string;
-    minus_movement: string;
+    itemCode: String;
+    batch: String;
+    quantity: Number;
+    plus_movement: String;
+    minus_movement: String;
     expDate: Date;
-    warehouseCode: string;
-    reference_order_number: string;
+    warehouseCode: String;
+    reference_order_number: String;
 }

@@ -141,15 +141,15 @@ export class ProductService {
     }
   }
 
-async getMovementsById(id: String): Promise<StockMovement[] | Message> {
-    return new Promise<StockMovement[] | Message>((resolve, reject) => {
+async getMovementsById(id: String): Promise<any> {
+    return new Promise<StockMovement>((resolve, reject) => {
       try {
         this.clientPg.query(selectAllMovements, (err, res) => {
           if (err)
             reject(
               this.messages.errorExcuteQuery('PostgreSQL', err.toString()),
             );
-          resolve(res.rows);
+          resolve(res.rows[0]);
         });
       } catch (error) {
         reject(this.messages.internalServerError());
@@ -474,9 +474,9 @@ async getMovementsById(id: String): Promise<StockMovement[] | Message> {
           status: true,
           createDate: itemData.createdate,
         };
+        await this.movementService.insertBrokenItem(failedItem);
         //Consumir la api para insertar el item dañado a el servicio de BIQ
         await this.biqService.postStockMovement(failedItem, 'HM169');
-        await this.movementService.insertBrokenItem(failedItem);
       }
 
       if (netProduction > 0) {
@@ -492,14 +492,9 @@ async getMovementsById(id: String): Promise<StockMovement[] | Message> {
           status: true,
           createDate: itemData.createdate,
         };
-        
-        try {
-          await this.biqService.postStockMovement(finishedItem, 'HM158');
-        } catch (error) {
-          console.log(`Error al enviar el movimiento de stock a BIQ: ${error}`);
-        }
         await this.movementService.insertProductionItem(finishedItem);
-
+        //Consumir la api para insertar el item producido a el servicio de BIQ
+        await this.biqService.postStockMovement(finishedItem, 'HM158');
       }
 
       await client.query(insertProductionReport, [
