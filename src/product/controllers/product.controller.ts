@@ -24,8 +24,16 @@ export class ProductController {
   @ApiOperation({ summary: 'Result of stock movement from BIQ' })
   @HttpCode(200)
   @ApiResponse({ status: 200, type: StockMovementDTO })
-  getMovements() {
+  getStockMovement() {
     return this.products.getAllMovements();
+  }
+
+  @Get('/BIQ/stockMovement/:id')
+  @ApiOperation({ summary: 'Result of stock movement from BIQ' })
+  @HttpCode(200)
+  @ApiResponse({ status: 200, type: StockMovementDTO })
+  getStockMovementById(@Param('id') id: string) {
+    return this.products.getMovementsById(id);
   }
 
   @Get('/BIQ/items')

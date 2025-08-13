@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Message } from 'src/messages/models/messages.model';
-import { Item } from '../models/produc.model';
+import { Item, StockMovement } from '../models/produc.model';
 import { MessagesService } from 'src/messages/services/messages/messages.service';
 import { Client } from 'pg';
 import { ProductService } from './products.service';
@@ -14,22 +14,27 @@ export class BiqService {
                 private readonly messages: MessagesService
     ) {}
 
-    async postStockMovement(item : Item, warehouse: string): Promise<Message> {
+    async postStockMovement(item : Item, warehouse: string): Promise< Message|StockMovement[]> {
         return new Promise<Message>(async (resolve, reject) => {
           try {
             //Consultar el stock movement
-            const stockMovement = await this.productService.getStockMovementById(item.messageId);
-            if (!stockMovement) {
+            const stockMovement: StockMovement[] | Message = await this.productService.getMovementsById(item.messageId);
+
+
+            //Validamos si la variable stockMovement es un array
+            if (!Array.isArray(stockMovement)) {
+              console.log('Error: stockMovement is not an array');
               reject(this.messages.generalError(null, 'Stock movement not found'));
+              return;
             }
-            //crear una instancia de stockMovementBiq nueva y vacia
+            console.log('Stock movement found:', stockMovement);
             const stockMovementBiq: BiqStockMovement = {
-              messageID: stockMovement.messageID,
-              messageDate: stockMovement.messageDate,
-              messageType: stockMovement.messageType,
-              messageUserID: stockMovement.messageUserID,
+              messageID: stockMovement[0].messageID,
+              messageDate: stockMovement[0].messageDate,
+              messageType: stockMovement[0].messageType,
+              messageUserID: stockMovement[0].messageUserID,
               movementOrder: {
-                logisticsCenter: stockMovement.movementOrder.logisticsCenter
+                logisticsCenter: stockMovement[0].movementOrder.logisticsCenter
               },
               items: [],
             };
@@ -46,6 +51,7 @@ export class BiqService {
             };
             //Agregar el itemBiq al array de items
             stockMovementBiq.items.push(itemBiq);
+            console.log('Stock movement BIQ:', stockMovementBiq);
             //Enviar el objeto a la api de BIQ por post y axios
             try {
               const response = await axios.post('http://192.168.5.143/MAPP_API/mappapi/api/StockMov', stockMovementBiq);

@@ -11,7 +11,12 @@ export const selectAllfailed = `SELECT * FROM public.failed_item`;
 export const selectAllfailedActive = `SELECT * FROM public.failed_item where status = true`;
 
 export const selectStockMovementByStockMovementId = `
-  SELECT * FROM public.stock_movement WHERE stock_movement_id = $1;
+  SELECT sm.message_id, sm.message_date, sm.message_type, sm.message_user_id, sm.logistics_center,
+         json_agg(i.*) AS items
+  FROM stock_movement sm
+  LEFT JOIN item i ON sm.message_id = i.stock_movement_id
+  WHERE sm.message_id = $1
+  GROUP BY sm.message_id, sm.message_date, sm.message_type, sm.message_user_id, sm.logistics_center;
 `;
 
 //--------------------------------------------INSERCIONES-----------------------------------------------------------//

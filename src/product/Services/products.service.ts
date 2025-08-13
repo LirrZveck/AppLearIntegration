@@ -52,14 +52,7 @@ export class ProductService {
   async getAllMovements(): Promise<StockMovement[] | Message> {
     return new Promise<StockMovement[] | Message>((resolve, reject) => {
       try {
-        const query = `
-          SELECT sm.message_id, sm.message_date, sm.message_type, sm.message_user_id, sm.logistics_center,
-                 json_agg(i.*) AS items
-          FROM stock_movement sm
-          LEFT JOIN item i ON sm.message_id = i.stock_movement_id
-          GROUP BY sm.message_id, sm.message_date, sm.message_type, sm.message_user_id, sm.logistics_center;
-        `;
-        this.clientPg.query(query, (err, res) => {
+        this.clientPg.query(selectAllMovements, (err, res) => {
           if (err)
             reject(
               this.messages.errorExcuteQuery('PostgreSQL', err.toString()),
@@ -148,24 +141,21 @@ export class ProductService {
     }
   }
 
-    async getStockMovementById(id: string): Promise<StockMovement> {
-        return new Promise<StockMovement>(async (resolve, reject) => {
-          const client = this.clientPg;
-          try {
-            client.query('BEGIN')
-            await client.query(selectStockMovementByStockMovementId, [id], (err, res) => {
-              if (err) {
-                client.query('ROLLBACK');
-                reject(this.messages.errorExcuteQuery('PostgreSQL', err.toString()));
-              }
-              client.query('COMMIT');
-              resolve(res.rows[0]);
-            });
-          } catch (error) {
-            
-          }
+async getMovementsById(id: String): Promise<StockMovement[] | Message> {
+    return new Promise<StockMovement[] | Message>((resolve, reject) => {
+      try {
+        this.clientPg.query(selectAllMovements, (err, res) => {
+          if (err)
+            reject(
+              this.messages.errorExcuteQuery('PostgreSQL', err.toString()),
+            );
+          resolve(res.rows);
         });
+      } catch (error) {
+        reject(this.messages.internalServerError());
       }
+    });
+  }
 
   async putItemByCode(
     productCode: string,
@@ -502,7 +492,12 @@ export class ProductService {
           status: true,
           createDate: itemData.createdate,
         };
-        await this.biqService.postStockMovement(finishedItem, 'HM158');
+        
+        try {
+          await this.biqService.postStockMovement(finishedItem, 'HM158');
+        } catch (error) {
+          console.log(`Error al enviar el movimiento de stock a BIQ: ${error}`);
+        }
         await this.movementService.insertProductionItem(finishedItem);
 
       }
