@@ -10,6 +10,7 @@ interface EnvVars {
   PGUSER: string;
   ENVIRONMENT: string;
   APPPORT: number;
+  BIQ_API_URL: string; // Added for BIQ API URL
 }
 
 const envsSchema = Joi.object({
@@ -20,7 +21,7 @@ const envsSchema = Joi.object({
   PGUSER: Joi.string().required(),
   ENVIRONMENT: Joi.string().required(),
   APPPORT: Joi.number().required(),
-
+  BIQ_API_URL: Joi.string().required(),
   //CONNECTIONSTRING: Joi.string().required(),
 }).unknown(true);
 
@@ -42,4 +43,5 @@ export const envs = {
   user: envVars.PGUSER,
   ENVIROMENT: envVars.ENVIRONMENT, // ✅ Aquí debe estar con mayúsculas
   appport: envVars.APPPORT,
+  biqUrl: envVars.BIQ_API_URL
 };

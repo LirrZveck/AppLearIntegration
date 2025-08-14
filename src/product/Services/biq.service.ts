@@ -2,7 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Message } from 'src/messages/models/messages.model';
 import { Item, StockMovement } from '../models/produc.model';
 import { MessagesService } from 'src/messages/services/messages/messages.service';
-import { Client } from 'pg';
+import { envs } from './../../config';
 import { ProductService } from './products.service';
 import { BiqItem, BiqStockMovement } from '../models/biq.model';
 import axios from 'axios';
@@ -57,7 +57,7 @@ export class BiqService {
         try {
           console.log('Prepared stock movement for BIQ:', stockMovementBiq);
           const response = await axios.post(
-            'http://192.168.5.143/MAPP_API/mappapi/api/StockMov',
+            `${envs.biqUrl}/StockMov`,
             stockMovement,
           );
           resolve(this.messages.statusOk('Stock movement sent to BIQ'));
