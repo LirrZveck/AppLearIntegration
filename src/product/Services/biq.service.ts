@@ -58,7 +58,7 @@ export class BiqService {
           console.log('Prepared stock movement for BIQ:', stockMovementBiq);
           const response = await axios.post(
             `${envs.biqUrl}/StockMov`,
-            stockMovement,
+            stockMovementBiq,
           );
           resolve(this.messages.statusOk('Stock movement sent to BIQ'));
         } catch (error) {
