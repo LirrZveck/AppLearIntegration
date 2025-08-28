@@ -35,6 +35,7 @@ export class BiqService {
         stockMovementBiq.messageType = stockMovement.message_type;
         stockMovementBiq.messageUserID = stockMovement.message_user_id;
         stockMovementBiq.movementOrder = {"logisticsCenter":stockMovement.logistics_center};
+        stockMovementBiq.status = true;
         const itemBiq = new BiqItem();
         itemBiq.batch = item.lot;
         itemBiq.itemCode = item.productCode;
@@ -55,10 +56,10 @@ export class BiqService {
           reference_order_number: itemBiq.reference_order_number,
         }];
         try {
-          console.log('Prepared stock movement for BIQ:', stockMovementBiq);
+          console.log('Prepared stock movement for BIQ:', JSON.stringify(stockMovementBiq));
           const response = await axios.post(
             `${envs.biqUrl}/StockMov`,
-            stockMovementBiq,
+            JSON.stringify(stockMovementBiq),
           );
           resolve(this.messages.statusOk('Stock movement sent to BIQ'));
         } catch (error) {

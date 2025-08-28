@@ -7,6 +7,7 @@ export class BiqStockMovement {
     logisticsCenter: String;
   };
   items: Array<BiqItem>;
+  status: Boolean
 }
 
 export class BiqItem {
